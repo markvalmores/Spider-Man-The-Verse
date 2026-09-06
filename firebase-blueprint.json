@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Public realtime leaderboard record for a Spider-Man player",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the player",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Player superhero alias / display name",
+          "maxLength": 50,
+          "minLength": 2
+        },
+        "score": {
+          "type": "number",
+          "description": "Total combined hero score"
+        },
+        "pizzas": {
+          "type": "number",
+          "description": "Total pizza slices collected"
+        },
+        "missions": {
+          "type": "number",
+          "description": "Total completed crime missions"
+        },
+        "heroKarma": {
+          "type": "number",
+          "description": "Hero karma points earned from citizen rescues"
+        },
+        "suit": {
+          "type": "string",
+          "description": "Equipped Spider-Man suit name",
+          "maxLength": 50
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp in milliseconds of last score update"
+        }
+      },
+      "required": ["userId", "displayName", "score", "pizzas", "missions", "heroKarma", "suit", "updatedAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user profile and game stats",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Player alias",
+          "maxLength": 50,
+          "minLength": 2
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp account was registered"
+        }
+      },
+      "required": ["userId", "email", "displayName", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/leaderboard/{userId}": {
+      "schema": "LeaderboardEntry",
+      "description": "Global realtime player leaderboard entries"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Private user account profiles"
+    }
+  }
+}

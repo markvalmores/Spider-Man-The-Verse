@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@layer utilities {
+  @keyframes aura-glow {
+    0%, 100% { text-shadow: 0 0 5px #ff0000, 0 0 10px #0000ff, 0 0 15px #ffffff; }
+    50% { text-shadow: 0 0 15px #ff0000, 0 0 30px #0000ff, 0 0 45px #ffffff; }
+  }
+  .animate-aura {
+    animation: aura-glow 2s infinite ease-in-out;
+  }
+}

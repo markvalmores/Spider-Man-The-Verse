@@ -1,0 +1,6 @@
+{
+  "name": "Spider-Man Prototype",
+  "description": "An interactive prototype of a 3D Spider-Man game, featuring mission selection and exploration modes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
