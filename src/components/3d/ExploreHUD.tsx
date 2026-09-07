@@ -35,6 +35,8 @@ import {
   Settings,
   Glasses,
   Users,
+  Gift,
+  Calendar,
 } from 'lucide-react';
 import { WEATHER_CONFIGS } from './WeatherSystem';
 import CityMinimap from './CityMinimap';
@@ -87,6 +89,7 @@ interface ExploreHUDProps {
   showLiveBroadcast?: boolean;
   onToggleLiveBroadcast?: () => void;
   onOpenAchievements?: () => void;
+  onOpenHolidayBonuses?: () => void;
   onInteractWithCitizen: () => void;
   onWeatherChange: (w: WeatherType) => void;
   onToggleAutoCycle: () => void;
@@ -145,6 +148,7 @@ export default function ExploreHUD({
   showLiveBroadcast = true,
   onToggleLiveBroadcast,
   onOpenAchievements,
+  onOpenHolidayBonuses,
   onInteractWithCitizen,
   onWeatherChange,
   onToggleAutoCycle,
@@ -409,6 +413,18 @@ export default function ExploreHUD({
             >
               <Award size={15} className="text-neutral-950 group-hover:scale-110 transition" />
               <span className="hidden sm:inline">ACHIEVEMENTS</span>
+            </button>
+          )}
+
+          {/* Holiday & Occasions Pizza Bonuses Button */}
+          {onOpenHolidayBonuses && (
+            <button
+              onClick={onOpenHolidayBonuses}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:brightness-110 border border-rose-300/80 rounded-xl text-white font-black text-xs sm:text-sm tracking-wider shadow-[0_0_15px_rgba(244,63,94,0.4)] transition active:scale-95 group"
+              title="Open Holiday & Occasion Pizza Calendar Bonuses"
+            >
+              <Gift size={15} className="text-yellow-300 group-hover:scale-110 transition animate-bounce" />
+              <span className="hidden sm:inline">HOLIDAY BONUSES</span>
             </button>
           )}
 
@@ -909,17 +925,20 @@ export default function ExploreHUD({
                 <span>DASH</span>
               </button>
 
-              {/* Web Zip */}
+              {/* Web Zip Propel Button */}
               <button
                 onClick={() => {
                   onControlChange('zip', true);
-                  setTimeout(() => onControlChange('zip', false), 200);
+                  setTimeout(() => onControlChange('zip', false), 250);
                 }}
-                className="px-3.5 py-2 bg-sky-700 active:bg-sky-900 border border-sky-400 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 font-bold"
+                className="px-3.5 py-2 bg-gradient-to-r from-sky-600 to-indigo-600 active:from-sky-800 active:to-indigo-800 border-2 border-sky-300 rounded-xl shadow-[0_0_15px_rgba(56,189,248,0.5)] text-xs sm:text-sm flex items-center gap-1.5 hover:brightness-110 transition active:scale-95 font-black text-white group animate-pulse"
+                title="Web-Zip: Rapidly propels forward towards target point or building face [Key: Q]"
               >
-                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.special}</span>
-                <Zap size={14} />
-                <span>ZIP</span>
+                <span className="w-5 h-5 rounded bg-black/50 flex items-center justify-center font-mono font-black text-xs text-sky-200 border border-sky-400/40">
+                  {glyphs.special || 'Q'}
+                </span>
+                <Crosshair size={15} className="text-yellow-300 group-hover:rotate-45 transition duration-300" />
+                <span>WEB-ZIP</span>
               </button>
 
               {/* Vault / Jump */}

@@ -113,12 +113,12 @@ export default function CityEnvironment({
     }
   });
 
-  // Dynamic View-Frustum / Radius streaming: only render buildings within 260 units of player
+  // Dynamic View-Frustum / Radius streaming: only render buildings within 320 units of player
   const visibleBuildings = useMemo(() => {
     return buildings.filter((b) => {
       const dx = b.x - playerPos[0];
       const dz = b.z - playerPos[2];
-      return Math.sqrt(dx * dx + dz * dz) < 240;
+      return Math.sqrt(dx * dx + dz * dz) < 320;
     });
   }, [buildings, Math.floor(playerPos[0] / 30), Math.floor(playerPos[2] / 30)]);
 
@@ -126,7 +126,7 @@ export default function CityEnvironment({
     <group>
       {/* City Ground / Asphalt with Weather Surface Reactions */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
-        <planeGeometry args={[700, 700]} />
+        <planeGeometry args={[1000, 1000]} />
         <meshStandardMaterial
           color={weatherConfig.groundColor}
           roughness={weatherConfig.groundRoughness}
@@ -137,8 +137,8 @@ export default function CityEnvironment({
       {/* Street Grid markings */}
       <gridHelper
         args={[
-          700,
-          70,
+          1000,
+          100,
           weather === 'snow' ? '#94a3b8' : '#384252',
           weather === 'snow' ? '#475569' : '#212733',
         ]}

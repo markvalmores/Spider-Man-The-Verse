@@ -78,14 +78,14 @@ export default function CityPedestrians({
 
     let idCount = 0;
 
-    // Grid sidewalks along avenues: x in [-130, -85, -40, 5, 50, 95, 140]
-    const sidewalkOffsets = [-130, -85, -40, 5, 50, 95, 140];
+    // Grid sidewalks along avenues spanning across the expanded Manhattan map
+    const sidewalkOffsets = [-200, -160, -120, -80, -40, 5, 40, 80, 120, 160, 200];
 
     sidewalkOffsets.forEach((avenueX) => {
-      // 5 pedestrians per avenue sidewalk
-      for (let i = 0; i < 5; i++) {
-        const startZ = -140 + i * 55 + (Math.random() * 8 - 4);
-        const targetZ = startZ + (Math.random() > 0.5 ? 55 : -55);
+      // 4 pedestrians per avenue sidewalk
+      for (let i = 0; i < 4; i++) {
+        const startZ = -220 + i * 110 + (Math.random() * 12 - 6);
+        const targetZ = startZ + (Math.random() > 0.5 ? 90 : -90);
         const name = NYC_NAMES[idCount % NYC_NAMES.length];
         list.push({
           id: `ped_${idCount++}`,

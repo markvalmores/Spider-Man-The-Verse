@@ -12,16 +12,16 @@ export interface AerialRing {
 }
 
 const SKYLINE_COURSE_RINGS: AerialRing[] = [
-  { id: 1, position: [0, 80, 20], rotation: [0, 0, 0], passed: false, radius: 4.5 },
-  { id: 2, position: [25, 95, 45], rotation: [0, 0.4, 0], passed: false, radius: 4.5 },
-  { id: 3, position: [60, 110, 80], rotation: [0, 0.7, 0], passed: false, radius: 4.5 },
-  { id: 4, position: [90, 125, 60], rotation: [0, 1.4, 0], passed: false, radius: 4.5 },
-  { id: 5, position: [110, 140, 20], rotation: [0, 2.0, 0], passed: false, radius: 4.5 },
-  { id: 6, position: [90, 130, -30], rotation: [0, 2.8, 0], passed: false, radius: 4.5 },
-  { id: 7, position: [40, 115, -70], rotation: [0, 3.1, 0], passed: false, radius: 4.5 },
-  { id: 8, position: [-20, 100, -80], rotation: [0, -2.5, 0], passed: false, radius: 4.5 },
-  { id: 9, position: [-70, 90, -40], rotation: [0, -1.8, 0], passed: false, radius: 4.5 },
-  { id: 10, position: [-40, 85, 0], rotation: [0, -0.6, 0], passed: false, radius: 4.5 },
+  { id: 1, position: [0, 45, 20], rotation: [0, 0, 0], passed: false, radius: 4.8 },
+  { id: 2, position: [40, 70, -20], rotation: [0, 0.4, 0], passed: false, radius: 4.8 },
+  { id: 3, position: [100, 105, -90], rotation: [0, 0.8, 0], passed: false, radius: 5.2 },
+  { id: 4, position: [110, 130, -110], rotation: [0, 1.4, 0], passed: false, radius: 5.5 }, // Avengers Tower Helipad pass
+  { id: 5, position: [50, 115, -140], rotation: [0, 2.2, 0], passed: false, radius: 5.0 },
+  { id: 6, position: [-120, 125, -150], rotation: [0, 2.8, 0], passed: false, radius: 5.5 }, // Empire State pass
+  { id: 7, position: [-150, 105, -80], rotation: [0, 3.1, 0], passed: false, radius: 5.0 },
+  { id: 8, position: [-120, 85, 80], rotation: [0, -2.5, 0], passed: false, radius: 4.8 }, // Oscorp Tower swoop
+  { id: 9, position: [-50, 65, 120], rotation: [0, -1.8, 0], passed: false, radius: 4.8 },
+  { id: 10, position: [0, 50, 40], rotation: [0, -0.6, 0], passed: false, radius: 5.0 },
 ];
 
 interface AerialRingChallengesProps {

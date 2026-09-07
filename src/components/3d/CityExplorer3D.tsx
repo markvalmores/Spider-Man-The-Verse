@@ -8,6 +8,7 @@ import PlayStationTouchOverlay from './PlayStationTouchOverlay';
 import PhotoModeUI from './PhotoModeUI';
 import DailyBugleBroadcast from './DailyBugleBroadcast';
 import PhotoGalleryModal from './PhotoGalleryModal';
+import HolidayPizzaBonusesModal from '../HolidayPizzaBonusesModal';
 import Leaderboard from '../Leaderboard';
 import { MultiplayerCityPlayers } from './MultiplayerCityPlayers';
 import { SettingsModal } from '../SettingsModal';
@@ -114,6 +115,7 @@ export default function CityExplorer3D({
 
   // Achievements State & Milestone Pop-up Toast
   const [isAchievementsOpen, setIsAchievementsOpen] = useState<boolean>(false);
+  const [isHolidayBonusesOpen, setIsHolidayBonusesOpen] = useState<boolean>(false);
   const [recentAchievement, setRecentAchievement] = useState<AchievementItem | null>(null);
 
   // Live Real-Time Canvas CSS Filter calculation for Photo Mode
@@ -262,36 +264,57 @@ export default function CityExplorer3D({
   const [activeInteractionTrigger, setActiveInteractionTrigger] = useState<number>(0);
   const [heroKarma, setHeroKarma] = useState<number>(120);
 
-  // Generate Procedural City Layout
+  // Generate Expanded Procedural Manhattan City Layout
   const buildings = useMemo<BuildingData[]>(() => {
     const list: BuildingData[] = [];
-    const colors = ['#1e293b', '#0f172a', '#334155', '#1e1b4b', '#18181b'];
-    const windowColors = ['#fde047', '#38bdf8', '#fb923c', '#e2e8f0'];
+    const colors = [
+      '#1e293b', // Slate Dark
+      '#0f172a', // Midnight Blue
+      '#334155', // Steel Gray
+      '#1e1b4b', // Oscorp Indigo
+      '#18181b', // Onyx Black
+      '#27272a', // Zinc Modern
+      '#1c1917', // Stone Brownstone
+      '#172554', // Midtown Blue Glass
+    ];
+    const windowColors = ['#fde047', '#38bdf8', '#fb923c', '#e2e8f0', '#a7f3d0'];
 
-    // Grid layout with avenues
-    for (let x = -150; x <= 150; x += 45) {
-      for (let z = -150; z <= 150; z += 45) {
+    // Grid layout with avenues spanning 480m x 480m
+    for (let x = -240; x <= 240; x += 40) {
+      for (let z = -240; z <= 240; z += 40) {
         // Skip central plaza for open starter swinging space
-        if (Math.abs(x) < 25 && Math.abs(z) < 25) continue;
+        if (Math.abs(x) < 22 && Math.abs(z) < 22) continue;
 
         const hash = Math.sin(x * 99 + z * 37);
-        const width = 24 + Math.abs(hash * 12);
-        const depth = 24 + Math.abs(Math.cos(x + z) * 12);
-        const height = 30 + Math.abs(Math.sin(x * 13 + z) * 65);
+        const hash2 = Math.cos(x * 47 + z * 83);
+        const distFromCenter = Math.sqrt(x * x + z * z);
+
+        const width = 22 + Math.abs(hash * 10);
+        const depth = 22 + Math.abs(hash2 * 10);
+
+        // Midtown core has towering supertalls (up to 135m), outer districts have varied brownstones & modern mid-rises
+        let baseHeight = 35;
+        if (distFromCenter < 120) {
+          baseHeight = 65 + Math.abs(Math.sin(x * 13 + z) * 65);
+        } else {
+          baseHeight = 28 + Math.abs(Math.sin(x * 7 + z * 11) * 55);
+        }
+
+        const height = Math.round(baseHeight);
         const color = colors[Math.floor(Math.abs(hash * colors.length)) % colors.length];
-        const windowColor = windowColors[Math.floor(Math.abs(hash * 3 * windowColors.length)) % windowColors.length];
+        const windowColor = windowColors[Math.floor(Math.abs(hash2 * windowColors.length)) % windowColors.length];
 
         list.push({
           id: `bld_${x}_${z}`,
-          x: x + (hash * 4),
-          z: z + (Math.cos(x) * 4),
+          x: x + hash * 3.5,
+          z: z + hash2 * 3.5,
           width,
           depth,
           height,
           color,
           windowColor,
-          hasWaterTower: Math.abs(hash) > 0.45,
-          hasAntenna: height > 65,
+          hasWaterTower: Math.abs(hash) > 0.4,
+          hasAntenna: height > 60,
           roofAnchor: [x, height, z],
         });
       }
@@ -299,47 +322,69 @@ export default function CityExplorer3D({
     return list;
   }, []);
 
-  // Collectible Pizzas scattered on rooftops and streets
+  // Collectible Pizzas scattered on rooftops and streets across expanded Manhattan
   const [pizzas, setPizzas] = useState<PizzaPickup[]>(() => {
     return [
       { id: 'p1', position: [0, 1, -20], collected: false, points: 50 },
-      { id: 'p2', position: [45, 55, 45], collected: false, points: 100 },
-      { id: 'p3', position: [-45, 65, -45], collected: false, points: 100 },
-      { id: 'p4', position: [90, 80, -45], collected: false, points: 150 },
-      { id: 'p5', position: [-90, 45, 90], collected: false, points: 75 },
-      { id: 'p6', position: [0, 85, 90], collected: false, points: 150 },
-      { id: 'p7', position: [-90, 1, -90], collected: false, points: 50 },
-      { id: 'p8', position: [90, 1, 90], collected: false, points: 50 },
+      { id: 'p2', position: [40, 55, 40], collected: false, points: 100 },
+      { id: 'p3', position: [-40, 65, -40], collected: false, points: 100 },
+      { id: 'p4', position: [80, 80, -40], collected: false, points: 150 },
+      { id: 'p5', position: [-80, 45, 80], collected: false, points: 75 },
+      { id: 'p6', position: [0, 85, 80], collected: false, points: 150 },
+      { id: 'p7', position: [-80, 1, -80], collected: false, points: 50 },
+      { id: 'p8', position: [80, 1, 80], collected: false, points: 50 },
+      { id: 'p9', position: [160, 105, 120], collected: false, points: 200 },
+      { id: 'p10', position: [-160, 95, -160], collected: false, points: 200 },
+      { id: 'p11', position: [-120, 1, 160], collected: false, points: 100 },
+      { id: 'p12', position: [160, 1, -160], collected: false, points: 100 },
     ];
   });
 
-  // Missions list
+  // Missions list with expanded citywide objectives
   const [missions, setMissions] = useState<CrimeMission[]>([
     {
       id: 'm1',
-      title: 'Rooftop Crime in Progress',
-      description: 'Swing to the marked skyscraper roof to intercept the crime gang!',
-      location: [45, 52, 45],
+      title: 'Rooftop Thug Ambush',
+      description: 'Swing to the marked skyscraper roof in Midtown to intercept the crime syndicate!',
+      location: [40, 56, 40],
       type: 'thug_ambush',
       reward: 250,
       completed: false,
     },
     {
       id: 'm2',
-      title: 'High-Altitude Oscorp Probe',
+      title: 'High-Altitude Oscorp Spire Probe',
       description: 'Reach the apex antenna at the north skyscraper summit!',
-      location: [0, 86, 90],
+      location: [0, 92, 80],
       type: 'time_trial',
       reward: 400,
       completed: false,
     },
     {
       id: 'm3',
-      title: 'Midtown Express Pizza Run',
-      description: 'Speed-swing across town to drop emergency slices to citizens!',
-      location: [-90, 46, 90],
+      title: 'East River Express Pizza Run',
+      description: 'Speed-swing across town to drop emergency deep-dish slices to citizens!',
+      location: [-80, 48, 80],
       type: 'pizza_delivery',
       reward: 350,
+      completed: false,
+    },
+    {
+      id: 'm4',
+      title: 'Financial District Heist Interception',
+      description: 'Perch atop the Financial District supertall and secure the rooftop vault!',
+      location: [160, 110, 120],
+      type: 'hostage_rescue',
+      reward: 500,
+      completed: false,
+    },
+    {
+      id: 'm5',
+      title: 'Hudson Yards Acrobatic Speed Run',
+      description: 'Chain web-swings, wall-runs, and supersonic dashes through the western canyon!',
+      location: [-160, 98, -160],
+      type: 'time_trial',
+      reward: 450,
       completed: false,
     },
   ]);
@@ -969,6 +1014,7 @@ export default function CityExplorer3D({
           showLiveBroadcast={showLiveBroadcast}
           onToggleLiveBroadcast={() => setShowLiveBroadcast((prev) => !prev)}
           onOpenAchievements={() => setIsAchievementsOpen(true)}
+          onOpenHolidayBonuses={() => setIsHolidayBonusesOpen(true)}
           onInteractWithCitizen={handleTriggerCitizenInteraction}
           onWeatherChange={handleWeatherChange}
           onToggleAutoCycle={() => setAutoCycleWeather((c) => !c)}
@@ -1035,6 +1081,18 @@ export default function CityExplorer3D({
           <Leaderboard onClose={() => setIsLeaderboardOpen(false)} />
         </div>
       )}
+
+      {/* Holiday & Occasion Pizza Calendar Bonuses Modal */}
+      <HolidayPizzaBonusesModal
+        isOpen={isHolidayBonusesOpen}
+        onClose={() => setIsHolidayBonusesOpen(false)}
+        pizza={pizza}
+        onUpdatePizza={onUpdatePizza}
+        onBonusClaimed={(name, amount) => {
+          setNotification(`🎉 CLAIMED ${name.toUpperCase()} BONUS: +${amount} 🍕!`);
+          setTimeout(() => setNotification(null), 3500);
+        }}
+      />
 
       {/* Spider-Man Photo Archive Modal */}
       {isGalleryOpen && (

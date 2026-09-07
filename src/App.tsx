@@ -18,6 +18,7 @@ import BattleResult from './components/BattleResult';
 import Leaderboard from './components/Leaderboard';
 import Achievements from './components/Achievements';
 import CityExplorer3D from './components/3d/CityExplorer3D';
+import FightingModeHub from './components/battle/FightingModeHub';
 import { useAudio } from './hooks/useAudio';
 import { Character } from './types';
 import {
@@ -144,11 +145,7 @@ export default function App() {
 
   const changeMode = (mode: GameMode) => {
     playSound('click');
-    if (mode === 'Battle Mode' || mode === 'Rank Fighting') {
-      setBattleState({ active: true });
-    } else {
-      setCurrentMode(mode);
-    }
+    setCurrentMode(mode);
   };
 
   // 1. Loading State while checking Firebase Auth
@@ -246,6 +243,24 @@ export default function App() {
         onUpdatePizza={updatePizza}
         onExit={() => setCurrentMode('Main Menu')}
         onOpenCharacterSelection={() => setCurrentMode('Character Selection')}
+      />
+    );
+  }
+
+  if (currentMode === 'Battle Mode' || currentMode === 'Rank Fighting' || currentMode === 'Arcade Mode') {
+    const subMode =
+      currentMode === 'Rank Fighting'
+        ? 'ranked'
+        : currentMode === 'Arcade Mode'
+        ? 'arcade'
+        : 'versus';
+
+    return (
+      <FightingModeHub
+        pizza={pizza}
+        onUpdatePizza={updatePizza}
+        initialSubMode={subMode}
+        onBackToMainMenu={() => setCurrentMode('Main Menu')}
       />
     );
   }

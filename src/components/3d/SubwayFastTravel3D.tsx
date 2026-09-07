@@ -46,6 +46,30 @@ export const SUBWAY_STATIONS: SubwayStation[] = [
     position: [-70, 0, 90],
     color: '#a855f7',
   },
+  {
+    id: 'subway_herald_sq',
+    name: '34th St - Herald Sq / Empire State',
+    lines: ['B', 'D', 'F', 'M', 'N', 'Q', 'R', 'W'],
+    district: 'Empire State District',
+    position: [-160, 0, -140],
+    color: '#ea580c',
+  },
+  {
+    id: 'subway_canal_st',
+    name: 'Canal St - Chinatown & F.E.A.S.T.',
+    lines: ['J', 'Z', 'N', 'Q', 'R', 'W', '6'],
+    district: 'Chinatown East',
+    position: [160, 0, -140],
+    color: '#dc2626',
+  },
+  {
+    id: 'subway_hudson_yards',
+    name: "34th St - Hudson Yards & Hell's Kitchen",
+    lines: ['7', 'A', 'C', 'E'],
+    district: "Hell's Kitchen / West Rail Yards",
+    position: [-160, 0, 140],
+    color: '#8b5cf6',
+  },
 ];
 
 interface SubwayFastTravel3DProps {

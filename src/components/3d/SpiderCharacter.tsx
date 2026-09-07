@@ -53,6 +53,7 @@ export default function SpiderCharacter({
   const swingAnchor = useRef<THREE.Vector3 | null>(null);
   const swingRopeLength = useRef<number>(40);
   const swingStartHeight = useRef<number>(15);
+  const swingArm = useRef<'right' | 'left'>('right');
   const isParabolicFlight = useRef<boolean>(false);
   const flightTimer = useRef<number>(0);
   const [webTarget, setWebTarget] = useState<THREE.Vector3 | null>(null);
@@ -296,30 +297,58 @@ export default function SpiderCharacter({
     }
   }, [suitId]);
 
-  // Find best anchor for web swinging
+  // Find best anchor for web swinging with realistic street canyon & rooftop spires
   const findBestAnchor = () => {
     let bestAnchor: THREE.Vector3 | null = null;
     let minScore = Infinity;
     const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current);
+    const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current);
 
     buildings.forEach((b) => {
-      const anchor = new THREE.Vector3(...b.roofAnchor);
-      const toAnchor = anchor.clone().sub(pos.current);
-      const dist = toAnchor.length();
+      const w2 = b.width * 0.45;
+      const d2 = b.depth * 0.45;
+      const roofY = b.height;
 
-      if (anchor.y > pos.current.y + 4 && dist > 18 && dist < 110) {
-        const dirToAnchor = toAnchor.clone().normalize();
-        const dot = forward.dot(dirToAnchor);
+      const candidateAnchors = [
+        new THREE.Vector3(b.x, roofY + (b.hasAntenna ? 14 : 2), b.z),
+        new THREE.Vector3(b.x - w2, roofY + 1, b.z - d2),
+        new THREE.Vector3(b.x + w2, roofY + 1, b.z - d2),
+        new THREE.Vector3(b.x - w2, roofY + 1, b.z + d2),
+        new THREE.Vector3(b.x + w2, roofY + 1, b.z + d2),
+      ];
 
-        if (dot > -0.1) {
-          const score = dist - dot * 35;
-          if (score < minScore) {
-            minScore = score;
-            bestAnchor = anchor;
+      candidateAnchors.forEach((anchor) => {
+        const toAnchor = anchor.clone().sub(pos.current);
+        const dist = toAnchor.length();
+
+        if (anchor.y > pos.current.y + 3 && dist >= 12 && dist <= 135) {
+          const dirToAnchor = toAnchor.clone().normalize();
+          const dotForward = forward.dot(dirToAnchor);
+
+          if (dotForward > -0.2) {
+            const distCost = Math.abs(dist - 42) * 0.35;
+            const angleCost = (1 - dotForward) * 26;
+            const heightBonus = Math.max(0, anchor.y - pos.current.y) * 0.25;
+            const score = distCost + angleCost - heightBonus;
+
+            if (score < minScore) {
+              minScore = score;
+              bestAnchor = anchor;
+            }
           }
         }
-      }
+      });
     });
+
+    // Fallback: If in an open avenue / plaza, create an anchor in the forward skyline
+    if (!bestAnchor) {
+      const swingSide = Math.sin(pos.current.x * 0.1 + pos.current.z * 0.1) > 0 ? 1 : -1;
+      bestAnchor = pos.current
+        .clone()
+        .add(forward.clone().multiplyScalar(45))
+        .add(right.clone().multiplyScalar(swingSide * 18))
+        .add(new THREE.Vector3(0, Math.max(30, 65 - pos.current.y * 0.3), 0));
+    }
 
     return bestAnchor;
   };
@@ -427,23 +456,33 @@ export default function SpiderCharacter({
       }
     }
 
-    // 3. Web Zip handling
+    // 3. Web Zip Dash Propulsion
     if (controls.zip && !isZipping.current && !isSwinging.current && parkourState.current === 'none') {
-      const anchor = findBestAnchor();
-      if (anchor) {
-        isZipping.current = true;
-        setWebTarget(anchor);
-        playSound('zip');
-        const zipDir = anchor.clone().sub(pos.current);
-        if (zipDir.lengthSq() > 0.001) {
-          zipDir.normalize();
-          vel.current.copy(zipDir.multiplyScalar(65));
-        }
-        setTimeout(() => {
-          isZipping.current = false;
-          setWebTarget(null);
-        }, 450);
+      let targetPoint = findBestAnchor();
+      if (!targetPoint) {
+        // Dynamic forward target point in line of sight
+        const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current);
+        targetPoint = pos.current.clone().add(forward.multiplyScalar(55)).add(new THREE.Vector3(0, 10, 0));
       }
+
+      isZipping.current = true;
+      setWebTarget(targetPoint);
+      playSound('zip');
+
+      const zipDir = targetPoint.clone().sub(pos.current);
+      if (zipDir.lengthSq() > 0.001) {
+        zipDir.normalize();
+        vel.current.copy(zipDir.multiplyScalar(72));
+        vel.current.y = Math.max(vel.current.y, 8);
+      }
+
+      isParabolicFlight.current = true;
+      flightTimer.current = 1.0;
+
+      setTimeout(() => {
+        isZipping.current = false;
+        setWebTarget(null);
+      }, 400);
     }
 
     // 4. Ground Slam
@@ -453,29 +492,34 @@ export default function SpiderCharacter({
       playSound('slam');
     }
 
-    // 5. Parabolic Web-Swinging Engine: Initiation & Parabolic Launch
+    // 5. Velocity-Based Web-Swinging Engine: Initiation & Parabolic Arc Flight
     if (controls.swing && !isSwinging.current && !isZipping.current && parkourState.current === 'none') {
       const anchor = findBestAnchor();
       if (anchor) {
         isSwinging.current = true;
         swingAnchor.current = anchor;
         swingStartHeight.current = pos.current.y;
-        swingRopeLength.current = Math.max(pos.current.distanceTo(anchor), 15);
+        swingArm.current = swingArm.current === 'right' ? 'left' : 'right';
+        swingRopeLength.current = Math.max(pos.current.distanceTo(anchor), 16);
         setWebTarget(anchor);
         playSound('swing');
       }
     } else if (!controls.swing && isSwinging.current) {
-      // Parabolic Web Release: Calculate launch trajectory from instantaneous tangential speed
+      // Velocity-Based Web Release: Slingshot impulse with angular momentum
       isSwinging.current = false;
       setWebTarget(null);
 
       const boostForward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current);
-      // Launch impulse into parabolic arc flight
-      vel.current.add(boostForward.multiplyScalar(16));
-      vel.current.y = Math.max(vel.current.y + 14, 16);
+      const currentSpeed = vel.current.length();
+
+      // If releasing during an upswing or at high forward speed, slingshot skyward!
+      if (vel.current.y > -2 || currentSpeed > 14) {
+        vel.current.add(boostForward.multiplyScalar(Math.min(currentSpeed * 0.35, 18)));
+        vel.current.y = Math.max(vel.current.y * 1.12 + 6, 16);
+      }
 
       isParabolicFlight.current = true;
-      flightTimer.current = 1.4;
+      flightTimer.current = 1.5;
       playSound('whoosh');
     }
 
@@ -863,47 +907,71 @@ export default function SpiderCharacter({
 
       if (isSwinging.current && swingAnchor.current) {
         // ==========================================
-        // PARABOLIC WEB-SWINGING PHYSICS ENGINE
+        // VELOCITY-BASED PENDULUM WEB SWINGING ENGINE
         // ==========================================
         const toAnchor = swingAnchor.current.clone().sub(pos.current);
         const currentDist = toAnchor.length();
+        const ropeDir = toAnchor.clone().normalize(); // Unit vector from player towards roof anchor
 
-        // Parabolic kinetic acceleration: As Spidey swoops down, potential energy converts into kinetic speed
-        const heightDrop = Math.max(0, swingStartHeight.current - pos.current.y);
-        const parabolicEnergyBoost = Math.sqrt(2 * 9.81 * heightDrop);
-
-        // Apply gravity
+        // Apply downward gravity
         vel.current.y += gravity * dt;
 
-        // Apply centripetal rope constraint & parabolic arc tension
-        if (currentDist > swingRopeLength.current && currentDist > 0.01) {
-          const ropeDir = toAnchor.clone().normalize();
-          const vDotRope = vel.current.dot(ropeDir);
-          // Zero outward radial velocity, keeping movement strictly tangential along the swing arc
-          vel.current.sub(ropeDir.multiplyScalar(vDotRope));
-          pos.current.add(ropeDir.multiplyScalar(currentDist - swingRopeLength.current));
+        // When rope becomes taut / reaches length constraint:
+        if (currentDist >= swingRopeLength.current && currentDist > 0.01) {
+          // 1. Position constraint: enforce constant chord / rope radius
+          pos.current.copy(swingAnchor.current.clone().sub(ropeDir.clone().multiplyScalar(swingRopeLength.current)));
 
-          // Tangential forward acceleration along swing trajectory
-          const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current);
-          vel.current.add(forward.multiplyScalar((26 + parabolicEnergyBoost * 0.7) * dt));
+          // 2. Velocity constraint: Remove outward radial velocity component
+          const vDotRope = vel.current.dot(ropeDir);
+          if (vDotRope < 0) {
+            vel.current.sub(ropeDir.clone().multiplyScalar(vDotRope));
+          }
+
+          // 3. Tangential Velocity & Aerodynamic Forward Drive
+          let tangent = vel.current.clone();
+          if (tangent.lengthSq() < 0.01) {
+            tangent = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current);
+          } else {
+            tangent.normalize();
+          }
+
+          // Pumping impulse: Holding sprint or forward accelerates Spidey through the bottom of the swoop
+          const isSprinting = !!controls.sprint;
+          const pumpPower = isSprinting ? 44 : 32;
+          const isDropping = vel.current.y < 0;
+          const swoopBonus = isDropping ? 18 : 8;
+
+          vel.current.add(tangent.multiplyScalar((pumpPower + swoopBonus) * dt));
+
+          // Clamp terminal speed in swing
+          const maxSpeed = isSprinting ? 56 : 46;
+          if (vel.current.length() > maxSpeed) {
+            vel.current.clampLength(0, maxSpeed);
+          }
         }
 
-        // Mid-swing aerodynamic steering
-        if (controls.left) rotY.current += 2.2 * dt;
-        if (controls.right) rotY.current -= 2.2 * dt;
+        // Mid-swing aerodynamic steering & banking
+        if (controls.left) {
+          rotY.current += 2.4 * dt;
+          vel.current.applyAxisAngle(new THREE.Vector3(0, 1, 0), 2.4 * dt);
+        }
+        if (controls.right) {
+          rotY.current -= 2.4 * dt;
+          vel.current.applyAxisAngle(new THREE.Vector3(0, 1, 0), -2.4 * dt);
+        }
 
-        // Jump key during swing triggers instant high-apex launch release!
+        // Jump key during swing triggers catapult high launch!
         if (controls.jump && jumpCooldown.current <= 0) {
           isSwinging.current = false;
           setWebTarget(null);
-          jumpCooldown.current = 0.4;
+          jumpCooldown.current = 0.35;
 
           const boostForward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current);
-          vel.current.add(boostForward.multiplyScalar(20));
-          vel.current.y = Math.max(vel.current.y + 18, 22);
+          vel.current.add(boostForward.multiplyScalar(24));
+          vel.current.y = Math.max(vel.current.y + 20, 24);
 
           isParabolicFlight.current = true;
-          flightTimer.current = 1.5;
+          flightTimer.current = 1.6;
           playSound('whoosh');
         }
       } else {
@@ -1012,14 +1080,74 @@ export default function SpiderCharacter({
         pos.current.set(0, 15, 0);
         vel.current.set(0, 0, 0);
       }
-      pos.current.x = THREE.MathUtils.clamp(pos.current.x, -190, 190);
-      pos.current.z = THREE.MathUtils.clamp(pos.current.z, -190, 190);
+      pos.current.x = THREE.MathUtils.clamp(pos.current.x, -270, 270);
+      pos.current.z = THREE.MathUtils.clamp(pos.current.z, -270, 270);
 
       // Ground collision
       if (pos.current.y <= 0) {
         pos.current.y = 0;
         if (isSlamming.current) isSlamming.current = false;
         vel.current.y = 0;
+      }
+
+      // ==========================================
+      // SOLID BUILDING COLLISION RESOLVER (NO PASSTHROUGH)
+      // ==========================================
+      const charRadius = 0.85; // Solid physics bounding capsule radius
+
+      for (const b of buildings) {
+        const minX = b.x - b.width / 2;
+        const maxX = b.x + b.width / 2;
+        const minZ = b.z - b.depth / 2;
+        const maxZ = b.z + b.depth / 2;
+        const roofY = b.height;
+
+        // 1. Rooftop Collision (Standing / Landing on roof)
+        const isOverRoof =
+          pos.current.x >= minX - 0.25 &&
+          pos.current.x <= maxX + 0.25 &&
+          pos.current.z >= minZ - 0.25 &&
+          pos.current.z <= maxZ + 0.25;
+
+        if (isOverRoof && pos.current.y >= roofY - 0.6 && pos.current.y <= roofY + 3.0) {
+          if (vel.current.y <= 0) {
+            pos.current.y = roofY;
+            vel.current.y = Math.max(0, vel.current.y);
+            if (isSlamming.current) isSlamming.current = false;
+          }
+        }
+
+        // 2. Solid Outer Walls (Prevent any clipping or passthrough)
+        if (pos.current.y < roofY - 0.1 && pos.current.y >= 0) {
+          if (
+            pos.current.x >= minX - charRadius &&
+            pos.current.x <= maxX + charRadius &&
+            pos.current.z >= minZ - charRadius &&
+            pos.current.z <= maxZ + charRadius
+          ) {
+            // Find minimal penetration depth and push player out to the wall exterior
+            const penWest = pos.current.x - (minX - charRadius);
+            const penEast = (maxX + charRadius) - pos.current.x;
+            const penNorth = pos.current.z - (minZ - charRadius);
+            const penSouth = (maxZ + charRadius) - pos.current.z;
+
+            const minPen = Math.min(penWest, penEast, penNorth, penSouth);
+
+            if (minPen === penWest) {
+              pos.current.x = minX - charRadius;
+              if (vel.current.x > 0) vel.current.x = 0;
+            } else if (minPen === penEast) {
+              pos.current.x = maxX + charRadius;
+              if (vel.current.x < 0) vel.current.x = 0;
+            } else if (minPen === penNorth) {
+              pos.current.z = minZ - charRadius;
+              if (vel.current.z > 0) vel.current.z = 0;
+            } else if (minPen === penSouth) {
+              pos.current.z = maxZ + charRadius;
+              if (vel.current.z < 0) vel.current.z = 0;
+            }
+          }
+        }
       }
 
       // ==========================================
@@ -1348,11 +1476,16 @@ export default function SpiderCharacter({
         leftLegRef.current.rotation.set(0.6, 0, -0.2);
         rightLegRef.current.rotation.set(0.9, 0, 0.2);
       } else if (isSwinging.current) {
-        // Right hand up holding web, legs trailed
-        rightArmRef.current.rotation.set(-2.7, 0, 0.3);
-        leftArmRef.current.rotation.set(0.5, 0, -0.5);
-        leftLegRef.current.rotation.set(0.8, 0, 0);
-        rightLegRef.current.rotation.set(1.2, 0, 0);
+        // Alternating Hand Web Swing Rig Pose with dynamic leg trailing
+        if (swingArm.current === 'right') {
+          rightArmRef.current.rotation.set(-2.7, 0, 0.25);
+          leftArmRef.current.rotation.set(0.6, 0, -0.6);
+        } else {
+          leftArmRef.current.rotation.set(-2.7, 0, -0.25);
+          rightArmRef.current.rotation.set(0.6, 0, 0.6);
+        }
+        leftLegRef.current.rotation.set(0.75, 0, -0.15);
+        rightLegRef.current.rotation.set(1.15, 0, 0.15);
       } else if (isAttacking.current) {
         rightArmRef.current.rotation.set(-1.6, 0.8, 0);
         leftArmRef.current.rotation.set(0.8, 0, 0);
@@ -1390,7 +1523,8 @@ export default function SpiderCharacter({
     // Update Web Line Geometry
     if (webMeshRef.current) {
       if (webTarget) {
-        const wristWorld = pos.current.clone().add(new THREE.Vector3(0.35, 1.8, -0.3).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current));
+        const handOffsetX = swingArm.current === 'right' ? 0.35 : -0.35;
+        const wristWorld = pos.current.clone().add(new THREE.Vector3(handOffsetX, 1.8, -0.3).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY.current));
         const distance = wristWorld.distanceTo(webTarget);
         webMeshRef.current.position.copy(wristWorld).lerp(webTarget, 0.5);
         webMeshRef.current.scale.set(1, distance, 1);

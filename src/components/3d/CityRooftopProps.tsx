@@ -24,7 +24,7 @@ export const INITIAL_BACKPACKS: BackpackCollectible[] = [
     id: 'bp_2',
     name: 'First Web-Fluid Formula Vial',
     lore: 'Calculated the polymer chain tensile strength in my bedroom before Aunt May made dinner.',
-    position: [60, 115, 60],
+    position: [40, 75, 40],
     collected: false,
     rewardPizza: 5,
   },
@@ -32,7 +32,7 @@ export const INITIAL_BACKPACKS: BackpackCollectible[] = [
     id: 'bp_3',
     name: 'Daily Bugle Press Pass #104',
     lore: 'J.J.J. yelled at me for 20 minutes before approving this badge. "PARKER, GET ME SPIDER-MAN!"',
-    position: [-100, 105, 0],
+    position: [-80, 105, 0],
     collected: false,
     rewardPizza: 5,
   },
@@ -40,7 +40,7 @@ export const INITIAL_BACKPACKS: BackpackCollectible[] = [
     id: 'bp_4',
     name: 'Prototype Spider-Tracer',
     lore: 'Emits a 2.4GHz chirp tuned to my spider-sense. Great for tailing getaway vans.',
-    position: [120, 140, 120],
+    position: [120, 125, 120],
     collected: false,
     rewardPizza: 5,
   },
@@ -49,6 +49,22 @@ export const INITIAL_BACKPACKS: BackpackCollectible[] = [
     name: 'Vulture Chitin Wing Scrap',
     lore: 'Toomes left this on the roof after our clash above the Queensboro Bridge.',
     position: [-120, 85, -120],
+    collected: false,
+    rewardPizza: 5,
+  },
+  {
+    id: 'bp_6',
+    name: 'Oscorp Security Keycard',
+    lore: 'Norman Osborn dropped this during an emergency evacuation of the laboratory.',
+    position: [160, 112, 120],
+    collected: false,
+    rewardPizza: 5,
+  },
+  {
+    id: 'bp_7',
+    name: 'Empire State Building Souvenir Coin',
+    lore: 'Bought this on my first field trip with Uncle Ben and Aunt May.',
+    position: [-160, 99, -160],
     collected: false,
     rewardPizza: 5,
   },
@@ -73,28 +89,34 @@ export default function CityRooftopProps({
   // Steam Vents locations on rooftops
   const steamVents: [number, number, number][] = [
     [0, 95.5, -15],
-    [55, 114.5, 55],
-    [-95, 104.5, -5],
-    [115, 139.5, 115],
-    [-115, 84.5, -115],
+    [40, 75.5, 40],
+    [-80, 104.5, -5],
+    [120, 124.5, 115],
+    [-120, 84.5, -115],
     [40, 75.5, -60],
     [-40, 85.5, 70],
+    [160, 111.5, 120],
+    [-160, 98.5, -160],
   ];
 
   // Water Towers locations
   const waterTowers: [number, number, number][] = [
     [15, 96, -25],
     [-10, 96, -15],
-    [65, 115, 70],
-    [-105, 105, 10],
-    [125, 140, 105],
+    [45, 76, 45],
+    [-85, 105, 10],
+    [125, 125, 105],
     [-125, 85, -110],
+    [165, 112, 115],
+    [-165, 99, -155],
   ];
 
   // Construction Cranes
   const cranes: { pos: [number, number, number]; rotY: number }[] = [
-    { pos: [70, 115, -40], rotY: 0.8 },
-    { pos: [-80, 125, 90], rotY: -1.2 },
+    { pos: [80, 115, -40], rotY: 0.8 },
+    { pos: [-80, 125, 80], rotY: -1.2 },
+    { pos: [160, 135, 80], rotY: 2.1 },
+    { pos: [-160, 110, -120], rotY: -0.6 },
   ];
 
   useFrame((_, delta) => {

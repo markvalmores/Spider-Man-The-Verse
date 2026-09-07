@@ -28,6 +28,8 @@ export default function CityLandmarks3D({
       { id: 't2', pos: [-75, 45, 0] as [number, number, number], radius: 10, height: 55 },
       { id: 't3', pos: [75, 40, 75] as [number, number, number], radius: 10, height: 50 },
       { id: 't4', pos: [110, 50, -65] as [number, number, number], radius: 10, height: 60 },
+      { id: 't5', pos: [-160, 60, -140] as [number, number, number], radius: 12, height: 75 },
+      { id: 't6', pos: [160, 55, 100] as [number, number, number], radius: 12, height: 70 },
     ],
     []
   );
@@ -35,12 +37,14 @@ export default function CityLandmarks3D({
   // Dynamic NYC Street Traffic
   const trafficVehicles = useMemo(
     () => [
-      { id: 'taxi_1', type: 'taxi', axis: 'z', lane: -22, speed: 14, min: -180, max: 180, pos: [0, 0.4, -100] as [number, number, number], dir: 1 },
-      { id: 'taxi_2', type: 'taxi', axis: 'z', lane: 22, speed: 16, min: -180, max: 180, pos: [0, 0.4, 60] as [number, number, number], dir: -1 },
-      { id: 'police_1', type: 'police', axis: 'x', lane: -68, speed: 20, min: -180, max: 180, pos: [-80, 0.4, 0] as [number, number, number], dir: 1 },
-      { id: 'bus_1', type: 'bus', axis: 'x', lane: 68, speed: 10, min: -180, max: 180, pos: [50, 0.4, 0] as [number, number, number], dir: -1 },
-      { id: 'taxi_3', type: 'taxi', axis: 'z', lane: -112, speed: 15, min: -180, max: 180, pos: [0, 0.4, -40] as [number, number, number], dir: 1 },
-      { id: 'taxi_4', type: 'taxi', axis: 'z', lane: 112, speed: 13, min: -180, max: 180, pos: [0, 0.4, 120] as [number, number, number], dir: -1 },
+      { id: 'taxi_1', type: 'taxi', axis: 'z', lane: -22, speed: 14, min: -240, max: 240, pos: [0, 0.4, -100] as [number, number, number], dir: 1 },
+      { id: 'taxi_2', type: 'taxi', axis: 'z', lane: 22, speed: 16, min: -240, max: 240, pos: [0, 0.4, 60] as [number, number, number], dir: -1 },
+      { id: 'police_1', type: 'police', axis: 'x', lane: -68, speed: 20, min: -240, max: 240, pos: [-80, 0.4, 0] as [number, number, number], dir: 1 },
+      { id: 'bus_1', type: 'bus', axis: 'x', lane: 68, speed: 10, min: -240, max: 240, pos: [50, 0.4, 0] as [number, number, number], dir: -1 },
+      { id: 'taxi_3', type: 'taxi', axis: 'z', lane: -112, speed: 15, min: -240, max: 240, pos: [0, 0.4, -40] as [number, number, number], dir: 1 },
+      { id: 'taxi_4', type: 'taxi', axis: 'z', lane: 112, speed: 13, min: -240, max: 240, pos: [0, 0.4, 120] as [number, number, number], dir: -1 },
+      { id: 'police_2', type: 'police', axis: 'z', lane: -160, speed: 22, min: -240, max: 240, pos: [0, 0.4, -180] as [number, number, number], dir: 1 },
+      { id: 'bus_2', type: 'bus', axis: 'x', lane: 160, speed: 11, min: -240, max: 240, pos: [-140, 0.4, 0] as [number, number, number], dir: 1 },
     ],
     []
   );
@@ -536,6 +540,140 @@ export default function CityLandmarks3D({
             </mesh>
           </group>
         ))}
+      </group>
+      {/* ======================================================== */}
+      {/* 9. EMPIRE STATE BUILDING & OBSERVATION DECK (Position: [-160, 0, -160], Height: 135) */}
+      {/* ======================================================== */}
+      <group position={[-160, 0, -160]}>
+        {/* Tier 1 Base */}
+        <mesh position={[0, 25, 0]} castShadow receiveShadow>
+          <boxGeometry args={[32, 50, 32]} />
+          <meshStandardMaterial color="#cbd5e1" roughness={0.6} metalness={0.2} />
+        </mesh>
+        {/* Tier 2 Setback */}
+        <mesh position={[0, 60, 0]} castShadow receiveShadow>
+          <boxGeometry args={[26, 30, 26]} />
+          <meshStandardMaterial color="#94a3b8" roughness={0.5} metalness={0.3} />
+        </mesh>
+        {/* Tier 3 Tower Shaft */}
+        <mesh position={[0, 92, 0]} castShadow receiveShadow>
+          <boxGeometry args={[20, 38, 20]} />
+          <meshStandardMaterial color="#64748b" roughness={0.4} metalness={0.4} />
+        </mesh>
+        {/* 86th Floor Observation Deck Decking */}
+        <group position={[0, 111.5, 0]}>
+          <mesh receiveShadow>
+            <boxGeometry args={[22, 1, 22]} />
+            <meshStandardMaterial color="#334155" roughness={0.7} />
+          </mesh>
+          {/* Perimeter Safety Railing */}
+          <mesh position={[0, 1.2, 0]}>
+            <boxGeometry args={[21.8, 1.4, 21.8]} />
+            <meshStandardMaterial color="#0284c7" wireframe />
+          </mesh>
+          {/* Observation Viewfinder Telescopes */}
+          {[
+            [10, 0.8, 0],
+            [-10, 0.8, 0],
+            [0, 0.8, 10],
+            [0, 0.8, -10],
+          ].map(([tx, ty, tz], i) => (
+            <mesh key={i} position={[tx, ty, tz]}>
+              <cylinderGeometry args={[0.2, 0.3, 1.4, 6]} />
+              <meshStandardMaterial color="#eab308" metalness={0.8} />
+            </mesh>
+          ))}
+        </group>
+        {/* Art Deco Crown & Airship Mooring Mast Spire */}
+        <mesh position={[0, 122, 0]}>
+          <cylinderGeometry args={[4, 8, 18, 16]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.7} roughness={0.3} />
+        </mesh>
+        {/* Lightning Rod Apex Beacon */}
+        <mesh position={[0, 136, 0]}>
+          <cylinderGeometry args={[0.15, 0.8, 14, 8]} />
+          <meshStandardMaterial color="#f8fafc" metalness={0.9} />
+        </mesh>
+        <mesh position={[0, 143, 0]}>
+          <sphereGeometry args={[0.6, 8, 8]} />
+          <meshBasicMaterial color="#ef4444" />
+        </mesh>
+      </group>
+
+      {/* ======================================================== */}
+      {/* 10. F.E.A.S.T. HOMELESS SHELTER (Position: [160, 0, -160]) */}
+      {/* ======================================================== */}
+      <group position={[160, 0, -160]}>
+        {/* Brick Building Main Body */}
+        <mesh position={[0, 16, 0]} castShadow receiveShadow>
+          <boxGeometry args={[28, 32, 28]} />
+          <meshStandardMaterial color="#7f1d1d" roughness={0.8} />
+        </mesh>
+        {/* Entrance Awning */}
+        <mesh position={[0, 4, 14.8]} castShadow>
+          <boxGeometry args={[10, 0.6, 3]} />
+          <meshStandardMaterial color="#047857" roughness={0.4} />
+        </mesh>
+        {/* F.E.A.S.T. Rooftop Garden & Greenhouse */}
+        <group position={[0, 32.5, 0]}>
+          <mesh position={[0, 2, 0]}>
+            <boxGeometry args={[14, 4, 12]} />
+            <meshStandardMaterial color="#059669" transparent opacity={0.5} wireframe />
+          </mesh>
+          {/* Chinese Festival Lantern String */}
+          {[-6, -2, 2, 6].map((lx, i) => (
+            <mesh key={i} position={[lx, 3, 7]}>
+              <sphereGeometry args={[0.6, 8, 8]} />
+              <meshBasicMaterial color="#ef4444" />
+            </mesh>
+          ))}
+        </group>
+        {/* F.E.A.S.T. Neon Wall Sign */}
+        <mesh position={[0, 7.5, 14.2]}>
+          <planeGeometry args={[12, 3]} />
+          <meshBasicMaterial color="#10b981" />
+        </mesh>
+      </group>
+
+      {/* ======================================================== */}
+      {/* 11. NELSON & MURDOCK LAW OFFICES (Position: [-160, 0, 160]) */}
+      {/* ======================================================== */}
+      <group position={[-160, 0, 160]}>
+        {/* Classic Hell's Kitchen Brownstone */}
+        <mesh position={[0, 14, 0]} castShadow receiveShadow>
+          <boxGeometry args={[24, 28, 24]} />
+          <meshStandardMaterial color="#78350f" roughness={0.85} />
+        </mesh>
+        {/* Fire Escapes Front Facade */}
+        {[-8, 8].map((fx, i) => (
+          <group key={i} position={[fx, 12, 12.3]}>
+            <mesh>
+              <boxGeometry args={[4.5, 18, 1.2]} />
+              <meshStandardMaterial color="#18181b" metalness={0.7} wireframe />
+            </mesh>
+          </group>
+        ))}
+        {/* Rooftop Perch Antenna & Water Tower */}
+        <group position={[0, 28.5, 0]}>
+          <mesh position={[-6, 4, -4]} castShadow>
+            <cylinderGeometry args={[2.5, 2.5, 5, 12]} />
+            <meshStandardMaterial color="#713f12" roughness={0.9} />
+          </mesh>
+          <mesh position={[6, 5, 6]}>
+            <cylinderGeometry args={[0.1, 0.2, 10, 6]} />
+            <meshStandardMaterial color="#ef4444" />
+          </mesh>
+          {/* Daredevil Perch Crossbar */}
+          <mesh position={[6, 9.5, 6]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.08, 0.08, 3.5, 6]} />
+            <meshBasicMaterial color="#ef4444" />
+          </mesh>
+        </group>
+        {/* "Nelson & Murdock Attorneys at Law" Brass Window Plaque */}
+        <mesh position={[0, 5, 12.2]}>
+          <planeGeometry args={[8, 2]} />
+          <meshStandardMaterial color="#eab308" metalness={0.8} roughness={0.2} />
+        </mesh>
       </group>
     </group>
   );
