@@ -16,7 +16,13 @@ export type SoundEffect =
   | 'ledgegrab'
   | 'climb'
   | 'whoosh'
-  | 'rankup';
+  | 'rankup'
+  | 'impact_heavy'
+  | 'impact_light'
+  | 'block'
+  | 'dodge'
+  | 'counter'
+  | 'victory_fanfare';
 
 export function useAudio() {
   const playSound = (soundName: SoundEffect) => {
@@ -311,6 +317,127 @@ export function useAudio() {
         gain.connect(ctx.destination);
         osc.start(now);
         osc.stop(now + 0.28);
+      } else if (soundName === 'impact_heavy') {
+        // Heavy Tekken-style bass punch crunch with sub-bass distortion
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(32, now + 0.2);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+
+        // Sub bass thump
+        const sub = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(95, now);
+        sub.frequency.exponentialRampToValueAtTime(25, now + 0.3);
+        subGain.gain.setValueAtTime(0.35, now);
+        subGain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+        sub.connect(subGain);
+        subGain.connect(ctx.destination);
+        sub.start(now);
+        sub.stop(now + 0.3);
+      } else if (soundName === 'impact_light') {
+        // Fast snap jab contact
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(480, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.08);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (soundName === 'block') {
+        // Solid metallic / shield deflection clink with guard resonance
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(840, now + 0.04);
+        osc.frequency.exponentialRampToValueAtTime(260, now + 0.12);
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.14);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.14);
+
+        // Clank ring
+        const clank = ctx.createOscillator();
+        const clankGain = ctx.createGain();
+        clank.type = 'triangle';
+        clank.frequency.setValueAtTime(1100, now);
+        clank.frequency.exponentialRampToValueAtTime(400, now + 0.15);
+        clankGain.gain.setValueAtTime(0.18, now);
+        clankGain.gain.linearRampToValueAtTime(0.005, now + 0.15);
+        clank.connect(clankGain);
+        clankGain.connect(ctx.destination);
+        clank.start(now);
+        clank.stop(now + 0.15);
+      } else if (soundName === 'dodge') {
+        // Rapid evasion slip / aerodynamic sidestep whip
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(620, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.14);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.005, now + 0.14);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.14);
+      } else if (soundName === 'counter') {
+        // Counter-hit spark strike (sharp high ping + punch crunch)
+        const ping = ctx.createOscillator();
+        const pingGain = ctx.createGain();
+        ping.type = 'sine';
+        ping.frequency.setValueAtTime(1400, now);
+        ping.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+        pingGain.gain.setValueAtTime(0.3, now);
+        pingGain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+        ping.connect(pingGain);
+        pingGain.connect(ctx.destination);
+        ping.start(now);
+        ping.stop(now + 0.1);
+
+        // Body crunch
+        const body = ctx.createOscillator();
+        const bodyGain = ctx.createGain();
+        body.type = 'sawtooth';
+        body.frequency.setValueAtTime(260, now);
+        body.frequency.exponentialRampToValueAtTime(45, now + 0.2);
+        bodyGain.gain.setValueAtTime(0.32, now);
+        bodyGain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        body.connect(bodyGain);
+        bodyGain.connect(ctx.destination);
+        body.start(now);
+        body.stop(now + 0.2);
+      } else if (soundName === 'victory_fanfare') {
+        // Epic champion victory fanfare (G-C-E-G-C high arpeggio with celebratory sustain)
+        const notes = [392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51];
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          const startTime = now + idx * 0.09;
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.28, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, startTime + (idx === notes.length - 1 ? 0.9 : 0.45));
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + (idx === notes.length - 1 ? 0.9 : 0.45));
+        });
       }
     } catch {
       // AudioContext might be blocked until user gesture or in sandbox

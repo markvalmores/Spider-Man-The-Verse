@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { BuildingData, PlayerControls, PhotoModePose, ParkourState } from './CityTypes';
 import { SoundEffect } from '../../hooks/useAudio';
+import { getSpiderSuitConfig, textureCache } from '../../utils/spiderManApi';
 
 interface SpiderCharacterProps {
   buildings: BuildingData[];
@@ -1548,19 +1549,44 @@ export default function SpiderCharacter({
     );
   });
 
+  // Procedural Spider-Man API Texture generator mapping
+  const suitConfig = useMemo(() => getSpiderSuitConfig(suitId), [suitId]);
+  const layeredTexture = useMemo(() => {
+    return textureCache.getLayeredTexture(
+      suitConfig.patternType,
+      suitColors.primary,
+      suitColors.secondary,
+      suitColors.webColor,
+      suitColors.emblem
+    );
+  }, [suitConfig, suitColors]);
+
   return (
     <>
       {/* 3D Dynamic Spider-Man Rig */}
       <group ref={characterRef} position={[0, 0, 0]}>
         {/* Facing forward into the world (showing back to third-person camera by default) */}
         <group rotation={[0, Math.PI, 0]}>
-          {/* Torso */}
+          {/* Torso Base Layer */}
           <mesh position={[0, 1.35, 0]} castShadow>
             <boxGeometry args={[0.7, 0.85, 0.45]} />
             <meshStandardMaterial
+              map={layeredTexture}
               color={suitColors.primary}
               roughness={suitColors.roughness}
               metalness={suitColors.metalness}
+            />
+          </mesh>
+
+          {/* Secondary Muscle/Flank Layer */}
+          <mesh position={[0, 1.35, 0.01]}>
+            <boxGeometry args={[0.67, 0.82, 0.46]} />
+            <meshStandardMaterial
+              color={suitColors.secondary}
+              roughness={suitColors.roughness + 0.1}
+              metalness={suitColors.metalness}
+              transparent
+              opacity={0.88}
             />
           </mesh>
 
@@ -1587,6 +1613,7 @@ export default function SpiderCharacter({
             <mesh castShadow>
               <sphereGeometry args={[0.35, 20, 20]} />
               <meshStandardMaterial
+                map={layeredTexture}
                 color={suitColors.primary}
                 roughness={suitColors.roughness}
                 metalness={suitColors.metalness}
@@ -1634,6 +1661,7 @@ export default function SpiderCharacter({
             <mesh position={[0, -0.4, 0]} castShadow>
               <boxGeometry args={[0.22, 0.75, 0.22]} />
               <meshStandardMaterial
+                map={layeredTexture}
                 color={suitColors.primary}
                 roughness={suitColors.roughness}
                 metalness={suitColors.metalness}
@@ -1651,6 +1679,7 @@ export default function SpiderCharacter({
             <mesh position={[0, -0.4, 0]} castShadow>
               <boxGeometry args={[0.22, 0.75, 0.22]} />
               <meshStandardMaterial
+                map={layeredTexture}
                 color={suitColors.primary}
                 roughness={suitColors.roughness}
                 metalness={suitColors.metalness}
@@ -1687,6 +1716,7 @@ export default function SpiderCharacter({
             <mesh position={[0, -0.85, 0.04]} castShadow>
               <boxGeometry args={[0.26, 0.25, 0.35]} />
               <meshStandardMaterial
+                map={layeredTexture}
                 color={suitColors.primary}
                 roughness={suitColors.roughness}
                 metalness={suitColors.metalness}
@@ -1708,6 +1738,7 @@ export default function SpiderCharacter({
             <mesh position={[0, -0.85, 0.04]} castShadow>
               <boxGeometry args={[0.26, 0.25, 0.35]} />
               <meshStandardMaterial
+                map={layeredTexture}
                 color={suitColors.primary}
                 roughness={suitColors.roughness}
                 metalness={suitColors.metalness}

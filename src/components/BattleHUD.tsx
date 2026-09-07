@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Flame, Zap, Shield, Sparkles, Swords, Heart, Trophy, Crown, Star } from 'lucide-react';
+import { useAudio } from '../hooks/useAudio';
 
 interface BattleHUDProps {
   p1Health: number;
@@ -128,6 +129,8 @@ export default function BattleHUD({
   p1RankName,
   p2RankName,
 }: BattleHUDProps) {
+  const { playSound } = useAudio();
+
   // Smooth shrinking red damage trails
   const [p1TrailHealth, setP1TrailHealth] = useState(p1Health);
   const [p2TrailHealth, setP2TrailHealth] = useState(p2Health);
@@ -155,8 +158,11 @@ export default function BattleHUD({
   useEffect(() => {
     if (combo > 0) {
       setComboPulseKey((k) => k + 1);
+      if (combo === 5 || combo === 10 || combo === 20) {
+        playSound('rankup');
+      }
     }
-  }, [combo]);
+  }, [combo, playSound]);
 
   // P1 Damage detection & smooth trail shrink
   useEffect(() => {
@@ -164,6 +170,11 @@ export default function BattleHUD({
       const damage = prevP1Health.current - p1Health;
       setP1HitFlash(true);
       setP1DamagePopup(damage);
+      if (damage >= 25) {
+        playSound('impact_heavy');
+      } else {
+        playSound('impact_light');
+      }
       setTimeout(() => setP1HitFlash(false), 200);
       setTimeout(() => setP1DamagePopup(null), 900);
 
@@ -177,7 +188,7 @@ export default function BattleHUD({
       setP1TrailHealth(p1Health);
     }
     prevP1Health.current = p1Health;
-  }, [p1Health]);
+  }, [p1Health, playSound]);
 
   // P2 Damage detection & smooth trail shrink
   useEffect(() => {
@@ -185,6 +196,11 @@ export default function BattleHUD({
       const damage = prevP2Health.current - p2Health;
       setP2HitFlash(true);
       setP2DamagePopup(damage);
+      if (damage >= 25) {
+        playSound('impact_heavy');
+      } else {
+        playSound('impact_light');
+      }
       setTimeout(() => setP2HitFlash(false), 200);
       setTimeout(() => setP2DamagePopup(null), 900);
 
@@ -198,7 +214,7 @@ export default function BattleHUD({
       setP2TrailHealth(p2Health);
     }
     prevP2Health.current = p2Health;
-  }, [p2Health]);
+  }, [p2Health, playSound]);
 
   return (
     <div className="absolute top-0 left-0 w-full p-3 sm:p-6 flex flex-col justify-between items-center font-sans text-white pointer-events-none select-none z-30">

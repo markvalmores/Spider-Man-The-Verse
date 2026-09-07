@@ -603,19 +603,39 @@ export default function TekkenFightHUD({
         <AnimatePresence>
           {announcementText && (
             <motion.div
-              initial={{ scale: 2, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-              className="text-center z-30 pointer-events-none"
+              initial={{ scale: 2.2, opacity: 0, y: -20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.6, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 22 }}
+              className="text-center z-30 pointer-events-none flex flex-col items-center"
             >
-              <h2 className="text-4xl sm:text-7xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-amber-400 to-red-600 drop-shadow-[0_0_35px_rgba(245,158,11,0.9)] uppercase">
+              {announcementText.includes('WIN') || announcementText.includes('PERFECT') || announcementText.includes('K.O.') ? (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="mb-2 p-2 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.6)]"
+                >
+                  <Award size={28} />
+                </motion.div>
+              ) : null}
+
+              <h2 className="text-4xl sm:text-7xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-amber-400 to-red-600 drop-shadow-[0_0_40px_rgba(245,158,11,0.95)] uppercase">
                 {announcementText}
               </h2>
               {announcementSub && (
-                <p className="text-sm sm:text-xl font-extrabold tracking-widest text-amber-200 uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] mt-1">
-                  {announcementSub}
-                </p>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="flex items-center gap-2 mt-1.5 px-4 py-1 rounded-full bg-black/60 border border-amber-400/40 backdrop-blur-md"
+                >
+                  <Sparkles size={16} className="text-amber-300 animate-spin" />
+                  <p className="text-xs sm:text-lg font-black tracking-widest text-amber-200 uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+                    {announcementSub}
+                  </p>
+                  <Sparkles size={16} className="text-amber-300 animate-spin" />
+                </motion.div>
               )}
             </motion.div>
           )}

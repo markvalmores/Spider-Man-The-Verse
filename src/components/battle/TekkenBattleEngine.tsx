@@ -406,6 +406,10 @@ export default function TekkenBattleEngine({
     saveRankedProfile(updatedProfile);
     setProfile(updatedProfile);
 
+    if (isVictory) {
+      playSound('victory_fanfare');
+    }
+
     setMatchResult({
       victory: isVictory,
       rpDelta,
@@ -527,7 +531,16 @@ export default function TekkenBattleEngine({
     setHitSparkPos([sparkX, 1.6, 0]);
     setTimeout(() => setHitSparkPos(null), 180);
 
-    playSound('combat');
+    // Audio SFX trigger: guard block vs heavy/light impact vs counter-hit
+    if (isTargetGuarding) {
+      playSound('block');
+    } else if (move.type === 'rage' || move.isLauncher || move.damage >= 25) {
+      playSound('impact_heavy');
+    } else if (comboCount >= 3) {
+      playSound('counter');
+    } else {
+      playSound('impact_light');
+    }
 
     if (attacker === 'p1') {
       // P1 hit P2
@@ -606,7 +619,7 @@ export default function TekkenBattleEngine({
       if (action === 'sidestep_left') {
         pushInputHistory('u/SS');
         setP1((p) => ({ ...p, positionZ: Math.min(2.5, p.positionZ + 1.2), currentAnimation: 'sidestep' }));
-        playSound('whoosh');
+        playSound('dodge');
         setTimeout(() => setP1((p) => ({ ...p, currentAnimation: 'idle' })), 300);
         return;
       }
@@ -614,13 +627,14 @@ export default function TekkenBattleEngine({
       if (action === 'sidestep_right') {
         pushInputHistory('d/SS');
         setP1((p) => ({ ...p, positionZ: Math.max(-2.5, p.positionZ - 1.2), currentAnimation: 'sidestep' }));
-        playSound('whoosh');
+        playSound('dodge');
         setTimeout(() => setP1((p) => ({ ...p, currentAnimation: 'idle' })), 300);
         return;
       }
 
       if (action === 'parry') {
         pushInputHistory('b/G');
+        playSound('block');
         setP1((p) => ({ ...p, isGuarding: true, currentAnimation: 'block' }));
         setTimeout(() => setP1((p) => ({ ...p, isGuarding: false, currentAnimation: 'idle' })), 450);
         return;

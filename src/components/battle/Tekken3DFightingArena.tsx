@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Sparkles } from '@react-three/drei';
 import { PlayerFighterState, ArenaStage, FighterArchetype } from './FightingTypes';
+import { getSpiderSuitConfig, textureCache } from '../../utils/spiderManApi';
 
 interface Tekken3DFightingArenaProps {
   p1: PlayerFighterState;
@@ -96,8 +97,36 @@ function Fighter3DModel({
     } else if (state.currentAnimation === 'block') {
       if (leftArmRef.current) leftArmRef.current.rotation.x = -Math.PI / 2.2;
       if (rightArmRef.current) rightArmRef.current.rotation.x = -Math.PI / 2.2;
+    } else if (state.currentAnimation === 'victory') {
+      // Dynamic Tekken Victory Pose: Victorious raised arms, proud chest posture, power breathing
+      if (torsoRef.current) {
+        torsoRef.current.position.y = 1.7 + Math.sin(time * 4) * 0.08;
+        torsoRef.current.rotation.y = Math.sin(time * 2) * 0.15;
+      }
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -Math.PI * 0.85; // Raised high in triumph
+        leftArmRef.current.rotation.z = -0.3;
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -Math.PI * 0.8;
+        rightArmRef.current.rotation.z = 0.35;
+      }
+      if (leftLegRef.current) leftLegRef.current.rotation.x = 0.15;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -0.25;
     }
   });
+
+  // Retrieve multi-layer suit texture metadata and procedural maps
+  const suitConfig = useMemo(() => getSpiderSuitConfig(archetype.id), [archetype.id]);
+  const layeredTexture = useMemo(() => {
+    return textureCache.getLayeredTexture(
+      suitConfig.patternType,
+      suitConfig.primaryHex,
+      suitConfig.secondaryHex,
+      suitConfig.webHex,
+      suitConfig.accentHex
+    );
+  }, [suitConfig]);
 
   return (
     <group ref={groupRef} position={[state.positionX, state.heightY, state.positionZ]}>
@@ -123,75 +152,167 @@ function Fighter3DModel({
         </group>
       )}
 
-      {/* 3. Character Body Geometry */}
-      {/* Torso */}
+      {/* 3. Victory Celebration Golden Light Pillar & Confetti Sparks */}
+      {state.currentAnimation === 'victory' && (
+        <group position={[0, 1.8, 0]}>
+          <Sparkles count={80} scale={4} size={6} speed={3} color="#facc15" />
+          <mesh>
+            <cylinderGeometry args={[0.8, 2.2, 6, 24]} />
+            <meshBasicMaterial color="#fef08a" transparent opacity={0.2} side={THREE.DoubleSide} />
+          </mesh>
+          <pointLight color="#fde047" intensity={4} distance={8} />
+        </group>
+      )}
+
+      {/* 4. Multi-Layered Mesh & Textures Character Hierarchy */}
+      {/* Torso Base Layer */}
       <mesh ref={torsoRef} position={[0, 1.6, 0]} castShadow>
         <boxGeometry args={[0.7, 0.9, 0.45]} />
-        <meshStandardMaterial color={archetype.primaryColor} roughness={0.3} metalness={0.2} />
+        <meshStandardMaterial
+          map={layeredTexture}
+          color={suitConfig.primaryHex}
+          roughness={suitConfig.roughness}
+          metalness={suitConfig.metalness}
+          emissive={suitConfig.emissive || '#000000'}
+          emissiveIntensity={suitConfig.emissiveIntensity || 0}
+        />
       </mesh>
 
-      {/* Head & Mask */}
+      {/* Secondary Musculature / Armor Layer */}
+      <mesh position={[0, 1.6, 0.02]}>
+        <boxGeometry args={[0.66, 0.86, 0.46]} />
+        <meshStandardMaterial
+          color={suitConfig.secondaryHex}
+          roughness={suitConfig.roughness + 0.1}
+          metalness={suitConfig.metalness}
+          transparent
+          opacity={0.85}
+        />
+      </mesh>
+
+      {/* Raised 3D Web Overlay Grid Layer on Chest */}
+      <mesh position={[0, 1.6, 0.24]}>
+        <planeGeometry args={[0.62, 0.82]} />
+        <meshBasicMaterial color={suitConfig.webHex} wireframe transparent opacity={0.4} />
+      </mesh>
+
+      {/* Head & Mask Base Sphere */}
       <mesh position={[0, 2.3, 0]} castShadow>
-        <sphereGeometry args={[0.32, 16, 16]} />
-        <meshStandardMaterial color={archetype.primaryColor} roughness={0.3} />
-        {/* White Spider Eyes */}
-        <mesh position={[0.12, 0.05, 0.25]} rotation={[0, 0.2, 0]}>
-          <planeGeometry args={[0.14, 0.08]} />
-          <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} />
-        </mesh>
-        <mesh position={[-0.12, 0.05, 0.25]} rotation={[0, -0.2, 0]}>
-          <planeGeometry args={[0.14, 0.08]} />
-          <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} />
-        </mesh>
+        <sphereGeometry args={[0.32, 20, 20]} />
+        <meshStandardMaterial
+          map={layeredTexture}
+          color={suitConfig.primaryHex}
+          roughness={suitConfig.roughness}
+          metalness={suitConfig.metalness}
+        />
       </mesh>
 
-      {/* Chest Emblem */}
-      <mesh position={[0, 1.65, 0.24]}>
-        <planeGeometry args={[0.3, 0.3]} />
-        <meshBasicMaterial color={archetype.secondaryColor} />
+      {/* Mask Webbing Texture Wire Lattice */}
+      <mesh position={[0, 2.3, 0]}>
+        <sphereGeometry args={[0.325, 14, 14]} />
+        <meshBasicMaterial color={suitConfig.webHex} wireframe transparent opacity={0.3} />
       </mesh>
 
-      {/* Left Arm */}
+      {/* High-Definition Multi-Layered Spider Eye Lenses */}
+      {/* Right Eye */}
+      <group position={[0.12, 2.35, 0.25]} rotation={[0, 0.22, -0.15]}>
+        {/* Outer Beveled Lens Frame */}
+        <mesh position={[0, 0, -0.002]}>
+          <planeGeometry args={[0.17, 0.11]} />
+          <meshBasicMaterial color={suitConfig.eyeFrameHex} />
+        </mesh>
+        {/* Inner Reflective High-Contrast Lens */}
+        <mesh position={[0, 0, 0.002]}>
+          <planeGeometry args={[0.13, 0.08]} />
+          <meshBasicMaterial color={suitConfig.eyeHex} />
+        </mesh>
+      </group>
+
+      {/* Left Eye */}
+      <group position={[-0.12, 2.35, 0.25]} rotation={[0, -0.22, 0.15]}>
+        {/* Outer Beveled Lens Frame */}
+        <mesh position={[0, 0, -0.002]}>
+          <planeGeometry args={[0.17, 0.11]} />
+          <meshBasicMaterial color={suitConfig.eyeFrameHex} />
+        </mesh>
+        {/* Inner Reflective High-Contrast Lens */}
+        <mesh position={[0, 0, 0.002]}>
+          <planeGeometry args={[0.13, 0.08]} />
+          <meshBasicMaterial color={suitConfig.eyeHex} />
+        </mesh>
+      </group>
+
+      {/* Front Iconic Spider Emblem Layer */}
+      <mesh position={[0, 1.65, 0.245]}>
+        <planeGeometry args={[0.32, 0.32]} />
+        <meshBasicMaterial color={suitConfig.accentHex} transparent opacity={0.95} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Back Spider Emblem Layer */}
+      <mesh position={[0, 1.65, -0.245]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[0.34, 0.34]} />
+        <meshBasicMaterial color={suitConfig.primaryHex === '#09090b' ? '#ffffff' : '#dc2626'} transparent opacity={0.9} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Left Arm with Layered Gauntlets */}
       <mesh ref={leftArmRef} position={[-0.45, 1.75, 0]} castShadow>
         <boxGeometry args={[0.22, 0.7, 0.22]} />
-        <meshStandardMaterial color={archetype.primaryColor} />
-        {/* Glove */}
-        <mesh position={[0, -0.4, 0]}>
-          <boxGeometry args={[0.24, 0.25, 0.24]} />
-          <meshStandardMaterial color={archetype.secondaryColor} />
+        <meshStandardMaterial
+          map={layeredTexture}
+          color={suitConfig.primaryHex}
+          roughness={suitConfig.roughness}
+        />
+        {/* Forearm Guard / Glove Layer */}
+        <mesh position={[0, -0.38, 0]}>
+          <boxGeometry args={[0.24, 0.28, 0.24]} />
+          <meshStandardMaterial color={suitConfig.secondaryHex} metalness={suitConfig.metalness} />
+        </mesh>
+        {/* Web Shooter Nozzle */}
+        <mesh position={[0, -0.48, 0.08]}>
+          <boxGeometry args={[0.08, 0.06, 0.06]} />
+          <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.8} />
         </mesh>
       </mesh>
 
-      {/* Right Arm */}
+      {/* Right Arm with Layered Gauntlets */}
       <mesh ref={rightArmRef} position={[0.45, 1.75, 0]} castShadow>
         <boxGeometry args={[0.22, 0.7, 0.22]} />
-        <meshStandardMaterial color={archetype.primaryColor} />
-        {/* Glove */}
-        <mesh position={[0, -0.4, 0]}>
-          <boxGeometry args={[0.24, 0.25, 0.24]} />
-          <meshStandardMaterial color={archetype.secondaryColor} />
+        <meshStandardMaterial
+          map={layeredTexture}
+          color={suitConfig.primaryHex}
+          roughness={suitConfig.roughness}
+        />
+        {/* Forearm Guard / Glove Layer */}
+        <mesh position={[0, -0.38, 0]}>
+          <boxGeometry args={[0.24, 0.28, 0.24]} />
+          <meshStandardMaterial color={suitConfig.secondaryHex} metalness={suitConfig.metalness} />
+        </mesh>
+        {/* Web Shooter Nozzle */}
+        <mesh position={[0, -0.48, 0.08]}>
+          <boxGeometry args={[0.08, 0.06, 0.06]} />
+          <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.8} />
         </mesh>
       </mesh>
 
-      {/* Left Leg */}
+      {/* Left Leg & Boot Layers */}
       <mesh ref={leftLegRef} position={[-0.22, 0.7, 0]} castShadow>
         <boxGeometry args={[0.25, 0.9, 0.25]} />
-        <meshStandardMaterial color={archetype.secondaryColor} />
-        {/* Boot */}
-        <mesh position={[0, -0.5, 0.05]}>
-          <boxGeometry args={[0.26, 0.3, 0.35]} />
-          <meshStandardMaterial color={archetype.primaryColor} />
+        <meshStandardMaterial color={suitConfig.secondaryHex} roughness={suitConfig.roughness} />
+        {/* Boot High Layer */}
+        <mesh position={[0, -0.48, 0.05]}>
+          <boxGeometry args={[0.27, 0.35, 0.35]} />
+          <meshStandardMaterial map={layeredTexture} color={suitConfig.primaryHex} metalness={suitConfig.metalness} />
         </mesh>
       </mesh>
 
-      {/* Right Leg */}
+      {/* Right Leg & Boot Layers */}
       <mesh ref={rightLegRef} position={[0.22, 0.7, 0]} castShadow>
         <boxGeometry args={[0.25, 0.9, 0.25]} />
-        <meshStandardMaterial color={archetype.secondaryColor} />
-        {/* Boot */}
-        <mesh position={[0, -0.5, 0.05]}>
-          <boxGeometry args={[0.26, 0.3, 0.35]} />
-          <meshStandardMaterial color={archetype.primaryColor} />
+        <meshStandardMaterial color={suitConfig.secondaryHex} roughness={suitConfig.roughness} />
+        {/* Boot High Layer */}
+        <mesh position={[0, -0.48, 0.05]}>
+          <boxGeometry args={[0.27, 0.35, 0.35]} />
+          <meshStandardMaterial map={layeredTexture} color={suitConfig.primaryHex} metalness={suitConfig.metalness} />
         </mesh>
       </mesh>
 
