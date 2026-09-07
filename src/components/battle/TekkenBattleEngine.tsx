@@ -826,16 +826,18 @@ export default function TekkenBattleEngine({
   return (
     <div className="w-full h-screen bg-black relative select-none overflow-hidden font-sans">
       {/* 3D Arena & Fighters Viewport */}
-      <Tekken3DFightingArena
-        p1={p1}
-        p2={p2}
-        p1Archetype={activeP1Archetype}
-        p2Archetype={activeP2Archetype}
-        stage={stage}
-        hitSparkPos={hitSparkPos}
-        isSlowMo={isSlowMo}
-        isCinematicRage={isCinematicRage}
-      />
+      <div className="absolute inset-0 z-0">
+        <Tekken3DFightingArena
+          p1={p1}
+          p2={p2}
+          p1Archetype={activeP1Archetype}
+          p2Archetype={activeP2Archetype}
+          stage={stage}
+          hitSparkPos={hitSparkPos}
+          isSlowMo={isSlowMo}
+          isCinematicRage={isCinematicRage}
+        />
+      </div>
 
       {/* Tekken 8 High-Octane HUD */}
       <TekkenFightHUD
