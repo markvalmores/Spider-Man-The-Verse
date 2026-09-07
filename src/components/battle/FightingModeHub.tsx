@@ -22,7 +22,9 @@ import {
   Lock,
   Flame as FireIcon,
   Crown,
+  History,
 } from 'lucide-react';
+import MatchHistoryModal from './MatchHistoryModal';
 import {
   FIGHTER_ROSTER,
   FighterArchetype,
@@ -116,6 +118,7 @@ export default function FightingModeHub({
   // Ranked Matchmaking Simulation State
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [matchFound, setMatchFound] = useState<FighterArchetype | null>(null);
+  const [showMatchHistory, setShowMatchHistory] = useState(false);
 
   const currentRank = getRankByTier(profile.rankTier);
   const nextRank = TEKKEN_RANKS.find((r) => r.tier === profile.rankTier + 1);
@@ -688,14 +691,25 @@ export default function FightingModeHub({
             </div>
           </div>
 
-          <div className="p-3 bg-black/40 rounded-2xl border border-neutral-800 text-xs text-neutral-400 flex items-center gap-2">
+          <div className="p-3 bg-black/40 rounded-2xl border border-neutral-800 text-xs text-neutral-400 flex items-center gap-2 mb-3">
             <Flame size={18} className="text-red-500 flex-shrink-0" />
             <span>
               Win ranked matches to earn bonus RP, climb divisions, and climb the Marvel leaderboard!
             </span>
           </div>
+
+          <button
+            onClick={() => { playSound('click'); setShowMatchHistory(true); }}
+            className="w-full py-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-900 border border-neutral-700 hover:border-red-500/50 text-xs font-bold text-amber-400 flex items-center justify-center gap-2 transition shadow"
+          >
+            <History size={15} />
+            <span>VIEW MATCH HISTORY (LAST 3 MATCHES)</span>
+          </button>
         </div>
       </div>
+
+      {/* Match History Modal */}
+      {showMatchHistory && <MatchHistoryModal onClose={() => setShowMatchHistory(false)} />}
 
       {/* Matchmaking Overlay Modal */}
       <AnimatePresence>

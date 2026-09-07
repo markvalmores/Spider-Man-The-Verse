@@ -103,3 +103,48 @@ export function calculateMatchRP(
 
   return { rpDelta: baseRP, isPromotion, isDemotion };
 }
+
+export interface MatchLogEntry {
+  id: string;
+  timestamp: number;
+  opponentName: string;
+  opponentAvatar: string;
+  opponentRank: string;
+  isVictory: boolean;
+  roundsWon: number;
+  roundsLost: number;
+  damageDealt: number;
+  maxCombo: number;
+  rpDelta: number;
+  gameMode: string;
+}
+
+const MATCH_HISTORY_STORAGE_KEY = 'tekken_spidey_match_history_v1';
+
+export function getMatchHistory(): MatchLogEntry[] {
+  try {
+    const raw = localStorage.getItem(MATCH_HISTORY_STORAGE_KEY);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch {
+    // Ignore
+  }
+  return [];
+}
+
+export function saveMatchToHistory(entry: Omit<MatchLogEntry, 'id' | 'timestamp'>): void {
+  try {
+    const history = getMatchHistory();
+    const newEntry: MatchLogEntry = {
+      ...entry,
+      id: Math.random().toString(36).substring(2, 9),
+      timestamp: Date.now(),
+    };
+    // Keep last 3 matches played
+    const updated = [newEntry, ...history].slice(0, 3);
+    localStorage.setItem(MATCH_HISTORY_STORAGE_KEY, JSON.stringify(updated));
+  } catch {
+    // Ignore
+  }
+}

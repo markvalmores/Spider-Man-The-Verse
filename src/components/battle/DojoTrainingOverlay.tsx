@@ -15,6 +15,8 @@ import {
   Volume2,
   Compass,
   ArrowRight,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import { FighterArchetype, MoveData } from './FightingTypes';
 import { useAudio } from '../../hooks/useAudio';
@@ -124,9 +126,25 @@ export default function DojoTrainingOverlay({
   const [currentTutorialStep, setCurrentTutorialStep] = useState<number>(0);
   const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState<number>(0);
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
   const activeStep = TUTORIAL_STEPS[currentTutorialStep];
   const activeChallenge = DOJO_COMBO_CHALLENGES[currentChallengeIndex];
+
+  if (isMinimized) {
+    return (
+      <div className="absolute top-4 left-4 z-40 pointer-events-auto">
+        <button
+          onClick={() => { playSound('click'); setIsMinimized(false); }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-neutral-950/90 border border-amber-500/60 text-amber-300 font-black text-xs shadow-xl backdrop-blur-md hover:bg-neutral-900 transition active:scale-95"
+          title="Show Dojo Training Panel"
+        >
+          <Target size={16} className="text-amber-400" />
+          <span>SHOW DOJO PANEL</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute top-4 left-4 z-40 pointer-events-auto flex flex-col gap-3 w-80 sm:w-96 font-sans text-white select-none">
@@ -144,13 +162,22 @@ export default function DojoTrainingOverlay({
               <p className="text-[10px] text-neutral-400">Interactive Tutorial & Combo Lab</p>
             </div>
           </div>
-          <button
-            onClick={onCloseDojo}
-            className="p-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition"
-            title="Exit Dojo"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => { playSound('click'); setIsMinimized(true); }}
+              className="p-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition"
+              title="Hide / Minimize Dojo Panel"
+            >
+              <EyeOff size={16} />
+            </button>
+            <button
+              onClick={onCloseDojo}
+              className="p-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition"
+              title="Exit Dojo"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Tab Selector */}

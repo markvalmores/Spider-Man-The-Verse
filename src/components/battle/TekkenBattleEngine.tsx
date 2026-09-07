@@ -19,6 +19,7 @@ import {
   getRankByTier,
   calculateMatchRP,
   RankedProfile,
+  saveMatchToHistory,
 } from './RankedProgressionSystem';
 import { useAudio } from '../../hooks/useAudio';
 import {
@@ -328,17 +329,22 @@ export default function TekkenBattleEngine({
     setIsRoundActive(false);
     setIsSlowMo(true);
 
+    let nextP1Wins = p1Ref.current.roundsWon;
+    let nextP2Wins = p2Ref.current.roundsWon;
+
     if (winner === 'p1') {
+      nextP1Wins += 1;
       const isPerfect = p1Ref.current.health >= 100;
       setAnnouncementText(isPerfect ? 'PERFECT!' : 'K.O.!');
       setAnnouncementSub(`${activeP1Archetype.name.toUpperCase()} WINS!`);
       playSound('win');
-      setP1((p) => ({ ...p, roundsWon: p.roundsWon + 1, currentAnimation: 'victory' }));
+      setP1((p) => ({ ...p, roundsWon: nextP1Wins, currentAnimation: 'victory' }));
     } else if (winner === 'p2') {
+      nextP2Wins += 1;
       setAnnouncementText('K.O.!');
       setAnnouncementSub(`${activeP2Archetype.name.toUpperCase()} WINS!`);
       playSound('slam');
-      setP2((p) => ({ ...p, roundsWon: p.roundsWon + 1, currentAnimation: 'victory' }));
+      setP2((p) => ({ ...p, roundsWon: nextP2Wins, currentAnimation: 'victory' }));
     } else {
       setAnnouncementText('DRAW GAME');
       setAnnouncementSub(null);
@@ -346,8 +352,6 @@ export default function TekkenBattleEngine({
 
     setTimeout(() => {
       setIsSlowMo(false);
-      const nextP1Wins = winner === 'p1' ? p1Ref.current.roundsWon + 1 : p1Ref.current.roundsWon;
-      const nextP2Wins = winner === 'p2' ? p2Ref.current.roundsWon + 1 : p2Ref.current.roundsWon;
 
       // Check if match won (First to 2 wins)
       if (nextP1Wins >= 2 || nextP2Wins >= 2) {
@@ -405,6 +409,21 @@ export default function TekkenBattleEngine({
 
     saveRankedProfile(updatedProfile);
     setProfile(updatedProfile);
+
+    if (gameMode === 'ranked') {
+      saveMatchToHistory({
+        opponentName: activeP2Archetype.name,
+        opponentAvatar: activeP2Archetype.avatar,
+        opponentRank: `Tier ${p2Tier}`,
+        isVictory,
+        roundsWon: p1Ref.current.roundsWon,
+        roundsLost: p2Ref.current.roundsWon,
+        damageDealt: Math.max(0, 100 - p2Ref.current.health),
+        maxCombo: maxComboInMatch,
+        rpDelta,
+        gameMode,
+      });
+    }
 
     if (isVictory) {
       playSound('victory_fanfare');
