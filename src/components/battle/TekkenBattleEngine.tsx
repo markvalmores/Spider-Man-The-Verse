@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Tekken3DFightingArena from './Tekken3DFightingArena';
 import TekkenFightHUD from './TekkenFightHUD';
-import PracticeModeOverlay from './PracticeModeOverlay';
+import DojoTrainingOverlay from './DojoTrainingOverlay';
 import {
   PlayerFighterState,
   FighterArchetype,
@@ -868,11 +868,13 @@ export default function TekkenBattleEngine({
         recentInputs={recentInputs}
       />
 
-      {/* Practice / Training Mode Overlay */}
+      {/* Dojo Training Mode Overlay */}
       {gameMode === 'practice' && (
-        <PracticeModeOverlay
+        <DojoTrainingOverlay
           fighter={activeP1Archetype}
           lastMoveUsed={lastMoveUsed}
+          comboCount={comboCount}
+          comboDamage={comboDamage}
           onResetPositions={() => {
             setP1((p) => ({ ...p, positionX: -4.5, heightY: 0, health: 100, isHeatActive: false, heatGauge: 100 }));
             setP2((p) => ({ ...p, positionX: 4.5, heightY: 0, health: 100, isHeatActive: false, heatGauge: 100 }));
@@ -880,7 +882,7 @@ export default function TekkenBattleEngine({
           }}
           dummyGuardMode={dummyGuardMode}
           onChangeDummyMode={setDummyGuardMode}
-          onClosePractice={onExitToHub}
+          onCloseDojo={onExitToHub}
         />
       )}
 

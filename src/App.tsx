@@ -19,6 +19,7 @@ import Leaderboard from './components/Leaderboard';
 import Achievements from './components/Achievements';
 import CityExplorer3D from './components/3d/CityExplorer3D';
 import FightingModeHub from './components/battle/FightingModeHub';
+import HelpModal from './components/HelpModal';
 import { useAudio } from './hooks/useAudio';
 import { Character } from './types';
 import {
@@ -27,7 +28,7 @@ import {
   markDayClaimed,
   STORAGE_KEYS,
 } from './utils/pizzaRewards';
-import { Gift, Sparkles, LogOut, User as UserIcon, Shield, RefreshCw, Trophy, Gamepad2, Smartphone, Monitor, Glasses } from 'lucide-react';
+import { Gift, Sparkles, LogOut, User as UserIcon, Shield, RefreshCw, Trophy, Gamepad2, Smartphone, Monitor, Glasses, HelpCircle } from 'lucide-react';
 import { detectDevice, detectConnectedGamepad } from './utils/deviceDetector';
 
 type GameMode =
@@ -61,6 +62,7 @@ export default function App() {
     active: false,
   });
   const [autoClaimNotice, setAutoClaimNotice] = useState<string | null>(null);
+  const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
   const { playSound } = useAudio();
   const [deviceInfo] = useState(() => detectDevice());
   const [gamepadInfo, setGamepadInfo] = useState(() => detectConnectedGamepad());
@@ -352,6 +354,18 @@ export default function App() {
         <button
           onClick={() => {
             playSound('click');
+            setShowHelpModal(true);
+          }}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-full font-bold text-sm bg-neutral-900 hover:bg-neutral-800 text-amber-400 border border-neutral-700 hover:border-amber-500/50 shadow-xl transition active:scale-95"
+          title="Open Help & How to Play Manual"
+        >
+          <HelpCircle size={16} className="text-amber-400" />
+          <span className="font-sans">HELP / MANUAL</span>
+        </button>
+
+        <button
+          onClick={() => {
+            playSound('click');
             setCurrentMode('Daily Pizza Rewards');
           }}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-lg border transition shadow-xl ${
@@ -365,6 +379,9 @@ export default function App() {
           <span>{todayUnclaimed ? 'CLAIM 🍕' : 'REWARDS'}</span>
         </button>
       </div>
+
+      {/* Help Modal */}
+      {showHelpModal && <HelpModal onClose={() => setShowHelpModal(false)} />}
 
       {/* Midnight Auto-Claim Banner Notification */}
       {autoClaimNotice && (
