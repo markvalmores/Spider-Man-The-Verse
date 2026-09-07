@@ -4,6 +4,7 @@ import CityEnvironment from './CityEnvironment';
 import SpiderCharacter from './SpiderCharacter';
 import CameraController from './CameraController';
 import ExploreHUD from './ExploreHUD';
+import PlayStationTouchOverlay from './PlayStationTouchOverlay';
 import PhotoModeUI from './PhotoModeUI';
 import DailyBugleBroadcast from './DailyBugleBroadcast';
 import PhotoGalleryModal from './PhotoGalleryModal';
@@ -878,6 +879,7 @@ export default function CityExplorer3D({
           cameraMode={cameraMode}
           cinemaBars={cinemaBars}
           gamepadConnected={gamepadConnected}
+          isMobile={deviceInfo.type === 'mobile_phone' || deviceInfo.type === 'mobile_tablet' || deviceInfo.isTouch}
           glyphs={activeGlyphs}
           controllerBrand={gamepadInfo.brand}
           onOpenSettings={() => setIsSettingsOpen(true)}
@@ -900,6 +902,26 @@ export default function CityExplorer3D({
           onControlChange={handleControlChange}
           onExit={onExit}
           onOpenSuits={onOpenCharacterSelection}
+        />
+      )}
+
+      {/* See-Through PlayStation Touch Overlay (Optimized for Mobile Phones iOS & Android) */}
+      {!isPhotoModeOpen && (
+        <PlayStationTouchOverlay
+          deviceInfo={deviceInfo}
+          onControlChange={handleControlChange}
+          parkourState={parkourState}
+          cameraMode={cameraMode}
+          onToggleCameraMode={handleToggleCameraMode}
+          onOpenPhotoMode={() => {
+            setIsPhotoModeOpen(true);
+            setPhotoSettings((s) => ({ ...s, active: true }));
+            playSound('shutter');
+          }}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onInteractWithCitizen={handleTriggerCitizenInteraction}
+          nearbyCitizen={!!nearbyCitizen}
+          onClimbAction={handleClimbAction}
         />
       )}
 

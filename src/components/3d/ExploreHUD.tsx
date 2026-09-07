@@ -58,6 +58,7 @@ interface ExploreHUDProps {
   cameraMode?: CameraMode;
   cinemaBars?: boolean;
   gamepadConnected?: boolean;
+  isMobile?: boolean;
   glyphs?: {
     confirm: string;
     cancel: string;
@@ -109,6 +110,7 @@ export default function ExploreHUD({
   cameraMode = 'cinematic',
   cinemaBars = false,
   gamepadConnected = false,
+  isMobile = false,
   glyphs = {
     confirm: '✕',
     cancel: '◯',
@@ -689,221 +691,158 @@ export default function ExploreHUD({
           </div>
         )}
 
-        {/* On-Screen Action Touch Buttons & Mobile Movement */}
+        {/* On-Screen Action Touch Buttons & Mobile Movement (Desktop non-gamepad fallback) */}
         <div className="flex items-end justify-between w-full flex-wrap gap-2">
-          {/* Left Side: Speedometer & Mobile GTA 5 D-Pad */}
-          <div className="flex items-center gap-2">
-            {/* Speedometer Widget */}
-            <div className="bg-neutral-900/85 border border-neutral-700 px-3 py-1.5 rounded-2xl backdrop-blur-md shadow-xl flex items-center gap-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-300">
-                  {speed}
-                </span>
-                <span className="text-[10px] text-red-500 font-sans font-bold">MPH</span>
-              </div>
-              <div className="w-14 bg-neutral-800 h-1.5 rounded-full overflow-hidden border border-neutral-700">
-                <div
-                  className="h-full bg-gradient-to-r from-sky-400 via-yellow-400 to-red-500 transition-all duration-100"
-                  style={{ width: `${Math.min(100, (speed / 90) * 100)}%` }}
-                />
-              </div>
+          {/* Speedometer Widget */}
+          <div className="bg-neutral-900/85 border border-neutral-700 px-3 py-1.5 rounded-2xl backdrop-blur-md shadow-xl flex items-center gap-2">
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-300">
+                {speed}
+              </span>
+              <span className="text-[10px] text-red-500 font-sans font-bold">MPH</span>
             </div>
-
-            {/* Mobile Touch D-Pad for GTA 5 Movement */}
-            <div className="flex md:hidden flex-col items-center gap-1 bg-neutral-900/90 p-1.5 rounded-2xl border border-neutral-700 backdrop-blur-md shadow-xl">
-              <button
-                onTouchStart={() => onControlChange('forward', true)}
-                onTouchEnd={() => onControlChange('forward', false)}
-                onMouseDown={() => onControlChange('forward', true)}
-                onMouseUp={() => onControlChange('forward', false)}
-                className="w-9 h-8 bg-neutral-800 active:bg-red-600 rounded-lg text-white font-bold flex items-center justify-center border border-neutral-600 text-[10px]"
-                title="Up: Forward"
-              >
-                ▲ FWD
-              </button>
-              <div className="flex items-center gap-1">
-                <button
-                  onTouchStart={() => onControlChange('left', true)}
-                  onTouchEnd={() => onControlChange('left', false)}
-                  onMouseDown={() => onControlChange('left', true)}
-                  onMouseUp={() => onControlChange('left', false)}
-                  className="w-9 h-8 bg-neutral-800 active:bg-red-600 rounded-lg text-white font-bold flex items-center justify-center border border-neutral-600 text-[10px]"
-                  title="Left: Walk Left"
-                >
-                  ◀
-                </button>
-                <button
-                  onTouchStart={() => onControlChange('backward', true)}
-                  onTouchEnd={() => onControlChange('backward', false)}
-                  onMouseDown={() => onControlChange('backward', true)}
-                  onMouseUp={() => onControlChange('backward', false)}
-                  className="w-9 h-8 bg-neutral-800 active:bg-red-600 rounded-lg text-white font-bold flex items-center justify-center border border-neutral-600 text-[10px]"
-                  title="Down: Walk Backwards"
-                >
-                  ▼
-                </button>
-                <button
-                  onTouchStart={() => onControlChange('right', true)}
-                  onTouchEnd={() => onControlChange('right', false)}
-                  onMouseDown={() => onControlChange('right', true)}
-                  onMouseUp={() => onControlChange('right', false)}
-                  className="w-9 h-8 bg-neutral-800 active:bg-red-600 rounded-lg text-white font-bold flex items-center justify-center border border-neutral-600 text-[10px]"
-                  title="Right: Walk Right"
-                >
-                  ▶
-                </button>
-              </div>
+            <div className="w-14 bg-neutral-800 h-1.5 rounded-full overflow-hidden border border-neutral-700">
+              <div
+                className="h-full bg-gradient-to-r from-sky-400 via-yellow-400 to-red-500 transition-all duration-100"
+                style={{ width: `${Math.min(100, (speed / 90) * 100)}%` }}
+              />
             </div>
           </div>
 
-          {/* Action Touch Buttons with Dynamic Controller Glyphs */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
-            {/* Ledge Hoist Action Button (Visible during ledge grab) */}
-            {parkourState === 'ledge_hang' && onClimbAction && (
+          {/* Desktop On-Screen Buttons (Hidden on mobile where PlayStationTouchOverlay is active) */}
+          {!isMobile && (
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
+              {/* Ledge Hoist Action Button (Visible during ledge grab) */}
+              {parkourState === 'ledge_hang' && onClimbAction && (
+                <button
+                  onClick={onClimbAction}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 border border-yellow-200 rounded-xl shadow-xl text-neutral-950 text-base font-black flex items-center gap-1 hover:brightness-110 active:scale-95 animate-pulse"
+                >
+                  <span>⬆️ CLIMB UP [{glyphs.confirm}]</span>
+                </button>
+              )}
+
+              {/* Citizen Greet Button */}
+              {nearbyCitizen && (
+                <button
+                  onClick={onInteractWithCitizen}
+                  className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 border border-yellow-200 rounded-xl shadow-xl text-neutral-950 text-base font-extrabold flex items-center gap-1 hover:brightness-110 active:scale-95"
+                >
+                  <span>🤝 GREET [{glyphs.special}]</span>
+                </button>
+              )}
+
+              {/* Wall Stick / Adhere button */}
               <button
-                onClick={onClimbAction}
-                className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 border border-yellow-200 rounded-xl shadow-xl text-neutral-950 text-base font-black flex items-center gap-1 hover:brightness-110 active:scale-95 animate-pulse"
+                onClick={() => {
+                  onControlChange('stick', true);
+                  setTimeout(() => onControlChange('stick', false), 400);
+                }}
+                className="px-3 py-2 bg-red-800 active:bg-red-950 border border-red-500 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 text-yellow-300 font-bold"
+                title="Stick to nearest skyscraper wall"
               >
-                <span>⬆️ CLIMB UP [{glyphs.confirm}]</span>
+                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.stick}</span>
+                <span>STICK</span>
               </button>
-            )}
 
-            {/* Citizen Greet Button */}
-            {nearbyCitizen && (
+              {/* Wall Run / Sprint button */}
               <button
-                onClick={onInteractWithCitizen}
-                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 border border-yellow-200 rounded-xl shadow-xl text-neutral-950 text-base font-extrabold flex items-center gap-1 hover:brightness-110 active:scale-95"
+                onMouseDown={() => onControlChange('sprint', true)}
+                onMouseUp={() => onControlChange('sprint', false)}
+                className="px-3 py-2 bg-emerald-700 active:bg-emerald-900 border border-emerald-400 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 text-emerald-100 font-bold"
+                title="Hold to Wall-Run along skyscraper faces"
               >
-                <span>🤝 GREET [{glyphs.special}]</span>
+                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.sprint}</span>
+                <span>WALL RUN</span>
               </button>
-            )}
 
-            {/* Wall Stick / Adhere button */}
-            <button
-              onClick={() => {
-                onControlChange('stick', true);
-                setTimeout(() => onControlChange('stick', false), 400);
-              }}
-              className="px-3 py-2 bg-red-800 active:bg-red-950 border border-red-500 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 text-yellow-300 font-bold"
-              title="Stick to nearest skyscraper wall"
-            >
-              <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.stick}</span>
-              <span>STICK</span>
-            </button>
+              {/* Swing button */}
+              <button
+                onMouseDown={() => onControlChange('swing', true)}
+                onMouseUp={() => onControlChange('swing', false)}
+                className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 active:from-red-800 active:to-red-900 border border-red-400 rounded-xl shadow-xl text-sm sm:text-base flex items-center gap-1.5 hover:brightness-110 transition active:scale-95 text-white font-bold"
+              >
+                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.swing}</span>
+                <Sparkles size={15} />
+                <span>SWING</span>
+              </button>
 
-            {/* Wall Crawl button */}
-            <button
-              onMouseDown={() => onControlChange('crawl', true)}
-              onMouseUp={() => onControlChange('crawl', false)}
-              onTouchStart={() => onControlChange('crawl', true)}
-              onTouchEnd={() => onControlChange('crawl', false)}
-              className="px-3 py-2 bg-amber-800 active:bg-amber-950 border border-amber-500 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 text-amber-200 font-bold"
-              title="4-Directional Wall Crawl"
-            >
-              <span>🕷️ CRAWL</span>
-            </button>
+              {/* Dash / Air Burst */}
+              <button
+                onClick={() => {
+                  onControlChange('dash', true);
+                  setTimeout(() => onControlChange('dash', false), 250);
+                }}
+                className="px-3.5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 active:from-cyan-800 active:to-blue-800 border border-cyan-300 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 font-bold text-white"
+                title="Supersonic Web Dash (Key: R)"
+              >
+                <Zap size={14} className="text-yellow-300 animate-pulse" />
+                <span>DASH</span>
+              </button>
 
-            {/* Wall Run / Sprint button */}
-            <button
-              onMouseDown={() => onControlChange('sprint', true)}
-              onMouseUp={() => onControlChange('sprint', false)}
-              onTouchStart={() => onControlChange('sprint', true)}
-              onTouchEnd={() => onControlChange('sprint', false)}
-              className="px-3 py-2 bg-emerald-700 active:bg-emerald-900 border border-emerald-400 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 text-emerald-100 font-bold"
-              title="Hold to Wall-Run along skyscraper faces"
-            >
-              <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.sprint}</span>
-              <span>WALL RUN</span>
-            </button>
+              {/* Web Zip */}
+              <button
+                onClick={() => {
+                  onControlChange('zip', true);
+                  setTimeout(() => onControlChange('zip', false), 200);
+                }}
+                className="px-3.5 py-2 bg-sky-700 active:bg-sky-900 border border-sky-400 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 font-bold"
+              >
+                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.special}</span>
+                <Zap size={14} />
+                <span>ZIP</span>
+              </button>
 
-            {/* Swing button */}
-            <button
-              onMouseDown={() => onControlChange('swing', true)}
-              onMouseUp={() => onControlChange('swing', false)}
-              onTouchStart={() => onControlChange('swing', true)}
-              onTouchEnd={() => onControlChange('swing', false)}
-              className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 active:from-red-800 active:to-red-900 border border-red-400 rounded-xl shadow-xl text-sm sm:text-base flex items-center gap-1.5 hover:brightness-110 transition active:scale-95 text-white font-bold"
-            >
-              <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.swing}</span>
-              <Sparkles size={15} />
-              <span>SWING</span>
-            </button>
+              {/* Vault / Jump */}
+              <button
+                onClick={() => {
+                  onControlChange('jump', true);
+                  setTimeout(() => onControlChange('jump', false), 200);
+                }}
+                className="px-3.5 py-2 bg-amber-600 active:bg-amber-700 border border-yellow-300 rounded-xl shadow-xl text-xs sm:text-sm hover:brightness-110 transition active:scale-95 font-bold"
+              >
+                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.confirm}</span>
+                <span>JUMP</span>
+              </button>
 
-            {/* Dash / Air Burst */}
-            <button
-              onClick={() => {
-                onControlChange('dash', true);
-                setTimeout(() => onControlChange('dash', false), 250);
-              }}
-              className="px-3.5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 active:from-cyan-800 active:to-blue-800 border border-cyan-300 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 font-bold text-white"
-              title="Supersonic Web Dash (Key: R)"
-            >
-              <Zap size={14} className="text-yellow-300 animate-pulse" />
-              <span>DASH</span>
-            </button>
+              {/* Acrobatics / Somersault */}
+              <button
+                onClick={() => {
+                  onControlChange('acrobat', true);
+                  setTimeout(() => onControlChange('acrobat', false), 400);
+                }}
+                className="px-3 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-700 active:from-fuchsia-900 active:to-purple-900 border border-fuchsia-400 rounded-xl shadow-xl text-xs sm:text-sm hover:brightness-110 transition active:scale-95 font-bold text-white flex items-center gap-1"
+                title="Perform Acrobatic Wall Kick and Somersault"
+              >
+                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.acrobat}</span>
+                <span>ACROBAT</span>
+              </button>
 
-            {/* Web Zip */}
-            <button
-              onClick={() => {
-                onControlChange('zip', true);
-                setTimeout(() => onControlChange('zip', false), 200);
-              }}
-              className="px-3.5 py-2 bg-sky-700 active:bg-sky-900 border border-sky-400 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-1 hover:brightness-110 transition active:scale-95 font-bold"
-            >
-              <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.special}</span>
-              <Zap size={14} />
-              <span>ZIP</span>
-            </button>
+              {/* Attack */}
+              <button
+                onClick={() => {
+                  onControlChange('attack', true);
+                  setTimeout(() => onControlChange('attack', false), 200);
+                }}
+                className="px-3 py-2 bg-neutral-800 active:bg-neutral-700 border border-neutral-600 rounded-xl shadow-xl text-xs sm:text-sm hover:brightness-110 transition active:scale-95 font-bold"
+              >
+                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.attack}</span>
+                <span>HIT</span>
+              </button>
 
-            {/* Vault / Jump */}
-            <button
-              onClick={() => {
-                onControlChange('jump', true);
-                setTimeout(() => onControlChange('jump', false), 200);
-              }}
-              className="px-3.5 py-2 bg-amber-600 active:bg-amber-700 border border-yellow-300 rounded-xl shadow-xl text-xs sm:text-sm hover:brightness-110 transition active:scale-95 font-bold"
-            >
-              <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.confirm}</span>
-              <span>JUMP</span>
-            </button>
-
-            {/* Acrobatics / Somersault */}
-            <button
-              onClick={() => {
-                onControlChange('acrobat', true);
-                setTimeout(() => onControlChange('acrobat', false), 400);
-              }}
-              className="px-3 py-2 bg-gradient-to-r from-fuchsia-700 to-purple-700 active:from-fuchsia-900 active:to-purple-900 border border-fuchsia-400 rounded-xl shadow-xl text-xs sm:text-sm hover:brightness-110 transition active:scale-95 font-bold text-white flex items-center gap-1"
-              title="Perform Acrobatic Wall Kick and Somersault"
-            >
-              <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.acrobat}</span>
-              <span>ACROBAT</span>
-            </button>
-
-            {/* Attack */}
-            <button
-              onClick={() => {
-                onControlChange('attack', true);
-                setTimeout(() => onControlChange('attack', false), 200);
-              }}
-              className="px-3 py-2 bg-neutral-800 active:bg-neutral-700 border border-neutral-600 rounded-xl shadow-xl text-xs sm:text-sm hover:brightness-110 transition active:scale-95 font-bold"
-            >
-              <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.attack}</span>
-              <span>HIT</span>
-            </button>
-
-            {/* Ground Slam */}
-            <button
-              onClick={() => {
-                onControlChange('slam', true);
-                setTimeout(() => onControlChange('slam', false), 200);
-              }}
-              className="px-3 py-2 bg-purple-700 active:bg-purple-900 border border-purple-400 rounded-xl shadow-xl text-xs sm:text-sm hover:brightness-110 transition active:scale-95 font-bold"
-            >
-              <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.cancel}</span>
-              <span>SLAM</span>
-            </button>
-          </div>
+              {/* Ground Slam */}
+              <button
+                onClick={() => {
+                  onControlChange('slam', true);
+                  setTimeout(() => onControlChange('slam', false), 200);
+                }}
+                className="px-3 py-2 bg-purple-700 active:bg-purple-900 border border-purple-400 rounded-xl shadow-xl text-xs sm:text-sm hover:brightness-110 transition active:scale-95 font-bold"
+              >
+                <span className="w-5 h-5 rounded bg-black/40 flex items-center justify-center font-mono font-bold text-xs">{glyphs.cancel}</span>
+                <span>SLAM</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
