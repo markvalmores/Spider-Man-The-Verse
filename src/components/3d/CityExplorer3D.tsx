@@ -251,6 +251,11 @@ export default function CityExplorer3D({
   const [isSwinging, setIsSwinging] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
 
+  // Spider-Vision AR Scanner & Suit Ultimate Power
+  const [spiderVisionActive, setSpiderVisionActive] = useState<boolean>(false);
+  const [suitPowerCharge, setSuitPowerCharge] = useState<number>(100);
+  const [suitPowerActive, setSuitPowerActive] = useState<boolean>(false);
+
   // Pedestrian AI & Karma System
   const [pedestrians, setPedestrians] = useState<PedestrianData[]>([]);
   const [nearbyCitizen, setNearbyCitizen] = useState<NearbyCitizenPrompt | null>(null);
@@ -438,6 +443,55 @@ export default function CityExplorer3D({
     }, 250);
   }, []);
 
+  // Spider-Vision AR Scanner Toggle Handler
+  const handleToggleSpiderVision = useCallback(() => {
+    setSpiderVisionActive((prev) => {
+      const next = !prev;
+      if (next) {
+        setNotification('👁️ SPIDER-VISION ACTIVE: POIs, Landmarks, Subways & Threats Highlighted');
+        if (playSound) playSound('whoosh');
+      } else {
+        setNotification('👁️ SPIDER-VISION STANDBY');
+      }
+      return next;
+    });
+  }, [playSound]);
+
+  // Suit Ultimate Power Activation Handler
+  const handleActivateSuitPower = useCallback(() => {
+    if (suitPowerCharge < 100 || suitPowerActive) return;
+
+    setSuitPowerActive(true);
+    setSuitPowerCharge(0);
+    setNotification('⚡ SUIT ULTIMATE POWER ACTIVATED!');
+    if (playSound) playSound('rankup');
+
+    // Gradually refill power gauge over 25 seconds of movement/combat
+    setTimeout(() => {
+      setSuitPowerActive(false);
+    }, 8000);
+
+    const interval = setInterval(() => {
+      setSuitPowerCharge((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 1200);
+  }, [suitPowerCharge, suitPowerActive, playSound]);
+
+  // Fast Travel Handler
+  const handleFastTravel = useCallback(
+    (dest: [number, number, number], name: string) => {
+      setPlayerPos(dest);
+      setNotification(`🚇 ARRIVED AT: ${name}`);
+      if (playSound) playSound('swing');
+    },
+    [playSound]
+  );
+
   // Keyboard Event Listeners with Dynamic Custom Keybindings & Parkour
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -486,6 +540,18 @@ export default function CityExplorer3D({
       // Cinema Letterbox Toggle: KeyB
       if (code === 'KeyB') {
         handleToggleCinemaBars();
+        return;
+      }
+
+      // Spider-Vision AR Scanner Toggle: KeyT
+      if (code === 'KeyT') {
+        handleToggleSpiderVision();
+        return;
+      }
+
+      // Suit Ultimate Power Activation: KeyF (if charged)
+      if (code === 'KeyF' && suitPowerCharge >= 100 && !suitPowerActive) {
+        handleActivateSuitPower();
         return;
       }
 
@@ -790,20 +856,31 @@ export default function CityExplorer3D({
             args={['#38bdf8', '#0f172a', 0.6]}
           />
 
-          {/* Procedural City Environment with Dynamic Weather & Pedestrian AI */}
+          {/* Procedural City Environment with Dynamic Weather, Crime Combat & Rooftop Props */}
           <CityEnvironment
             buildings={buildings}
             playerPos={playerPos}
             pizzas={pizzas}
             activeMission={activeMission}
             weather={weather}
+            isPaused={isPhotoModeOpen}
             activeInteractionTrigger={activeInteractionTrigger}
             isPlayerAttackingOrSlamming={controls.attack || controls.slam}
+            isAttacking={controls.attack}
+            isSlamming={controls.slam}
+            spiderVisionActive={spiderVisionActive}
             onCollectPizza={handleCollectPizza}
             onReachMission={handleReachMission}
             onPedestriansUpdate={setPedestrians}
             onNearbyCitizenChange={setNearbyCitizen}
             onCitizenInteracted={handleCitizenInteracted}
+            onBackpackCollected={(name, lore, reward) => {
+              onUpdatePizza(pizza + reward);
+              setHeroKarma((k) => k + 25);
+              setNotification(`🎒 COLLECTIBLE FOUND: ${name}! "${lore}" (+${reward} 🍕)`);
+              if (playSound) playSound('rankup');
+            }}
+            onFastTravel={handleFastTravel}
             playSound={playSound}
           />
 
@@ -865,6 +942,7 @@ export default function CityExplorer3D({
           playerRotY={playerRotY}
           buildings={buildings}
           pizzaCount={pizza}
+          suitId={selectedCharacter?.id || 'spider-man-2-classic'}
           suitName={selectedCharacter?.name || 'Classic Suit'}
           activeMission={activeMission}
           pizzas={pizzas}
@@ -880,6 +958,11 @@ export default function CityExplorer3D({
           cinemaBars={cinemaBars}
           gamepadConnected={gamepadConnected}
           isMobile={deviceInfo.type === 'mobile_phone' || deviceInfo.type === 'mobile_tablet' || deviceInfo.isTouch}
+          spiderVisionActive={spiderVisionActive}
+          suitPowerCharge={suitPowerCharge}
+          suitPowerActive={suitPowerActive}
+          onToggleSpiderVision={handleToggleSpiderVision}
+          onActivateSuitPower={handleActivateSuitPower}
           glyphs={activeGlyphs}
           controllerBrand={gamepadInfo.brand}
           onOpenSettings={() => setIsSettingsOpen(true)}

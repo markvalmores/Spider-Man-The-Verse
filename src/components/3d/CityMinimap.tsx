@@ -249,6 +249,67 @@ export default function CityMinimap({
       ctx.stroke();
     });
 
+    // 6.5 Iconic NYC & Marvel Landmarks
+    const landmarks = [
+      { name: 'Avengers Tower', icon: '🅰️', x: 110, z: -110, color: '#38bdf8' },
+      { name: 'Oscorp', icon: '🏢', x: -110, z: 110, color: '#10b981' },
+      { name: 'Daily Bugle', icon: '📰', x: 0, z: 115, color: '#fbbf24' },
+      { name: 'Queensboro Bridge', icon: '🌉', x: 0, z: -220, color: '#94a3b8' },
+      { name: 'Central Park', icon: '🌲', x: -110, z: -45, color: '#22c55e' },
+      { name: 'Times Square', icon: '✨', x: 0, z: -45, color: '#ec4899' },
+    ];
+
+    landmarks.forEach((lm) => {
+      const lx = toCanvasX(lm.x);
+      const lz = toCanvasZ(lm.z);
+      if (lx < -30 || lx > size + 30 || lz < -30 || lz > size + 30) return;
+
+      // Marker diamond
+      ctx.save();
+      ctx.translate(lx, lz);
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, Math.PI * 2);
+      ctx.fillStyle = lm.color;
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      if (isExpanded) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${lm.icon} ${lm.name}`, 0, -8);
+      }
+      ctx.restore();
+    });
+
+    // 6.6 Co-Op Multiplayer Heroes (Green Icon Indicators)
+    const coopPlayers = [
+      { name: 'Miles', x: 85, z: 50 },
+      { name: 'Gwen', x: -100, z: -80 },
+      { name: 'Raimi_Peter', x: 120, z: 90 },
+      { name: 'Andrew_Spidey', x: -80, z: 100 },
+    ];
+    coopPlayers.forEach((cp) => {
+      const cx = toCanvasX(cp.x);
+      const cz = toCanvasZ(cp.z);
+      ctx.beginPath();
+      ctx.arc(cx, cz, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#22c55e'; // Green icon indicator
+      ctx.fill();
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      if (isExpanded) {
+        ctx.fillStyle = '#4ade80';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`🟢 ${cp.name}`, cx, cz - 7);
+      }
+    });
+
     // 7. Active Crime Mission Marker
     if (activeMission && !activeMission.completed) {
       const mx = toCanvasX(activeMission.location[0]);

@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import {
   CrimeMission,
   PlayerControls,
@@ -33,9 +34,14 @@ import {
   EyeOff,
   Settings,
   Glasses,
+  Users,
 } from 'lucide-react';
 import { WEATHER_CONFIGS } from './WeatherSystem';
 import CityMinimap from './CityMinimap';
+import { SpiderGadgetBar, SpiderGadgetType, GADGET_DEFINITIONS } from './SpiderGadgetSystem';
+import { CrimeRadioDispatch, CrimeIncident } from './CrimeRadioDispatch';
+import { MultiplayerHubModal } from './MultiplayerHubModal';
+import { SuitUltimatePowerHUD } from './SuitUltimatePowerSystem';
 
 interface ExploreHUDProps {
   speed: number;
@@ -44,6 +50,7 @@ interface ExploreHUDProps {
   playerRotY?: number;
   buildings: BuildingData[];
   pizzaCount: number;
+  suitId?: string;
   suitName: string;
   activeMission: CrimeMission | null;
   pizzas: PizzaPickup[];
@@ -59,6 +66,11 @@ interface ExploreHUDProps {
   cinemaBars?: boolean;
   gamepadConnected?: boolean;
   isMobile?: boolean;
+  spiderVisionActive?: boolean;
+  suitPowerCharge?: number;
+  suitPowerActive?: boolean;
+  onToggleSpiderVision?: () => void;
+  onActivateSuitPower?: () => void;
   glyphs?: {
     confirm: string;
     cancel: string;
@@ -96,6 +108,7 @@ export default function ExploreHUD({
   playerRotY = 0,
   buildings,
   pizzaCount,
+  suitId = 'spider-man-2-classic',
   suitName,
   activeMission,
   pizzas,
@@ -111,6 +124,11 @@ export default function ExploreHUD({
   cinemaBars = false,
   gamepadConnected = false,
   isMobile = false,
+  spiderVisionActive = false,
+  suitPowerCharge = 100,
+  suitPowerActive = false,
+  onToggleSpiderVision,
+  onActivateSuitPower,
   glyphs = {
     confirm: '✕',
     cancel: '◯',
@@ -141,6 +159,53 @@ export default function ExploreHUD({
   onOpenSuits,
 }: ExploreHUDProps) {
   const currentWeatherConfig = WEATHER_CONFIGS[weather];
+
+  // Multiplayer & Co-Op State
+  const [multiplayerHubOpen, setMultiplayerHubOpen] = useState(false);
+  const [multiplayerEnabled, setMultiplayerEnabled] = useState(true);
+
+  // Spider-Tech Gadgets State
+  const [activeGadget, setActiveGadget] = useState<SpiderGadgetType>('web_shooter');
+  const [gadgetCharges, setGadgetCharges] = useState<Record<SpiderGadgetType, number>>({
+    web_shooter: 8,
+    impact_web: 4,
+    web_bomb: 3,
+    electric_web: 4,
+    suspension_matrix: 2,
+  });
+
+  // Police Radio Crime Dispatch Incident
+  const [activeRadioIncident, setActiveRadioIncident] = useState<CrimeIncident | null>(null);
+
+  // Keyboard shortcut for Gadgets [1, 2, 3, 4, 5]
+  useEffect(() => {
+    const handleGadgetKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '1') setActiveGadget('web_shooter');
+      if (e.key === '2') setActiveGadget('impact_web');
+      if (e.key === '3') setActiveGadget('web_bomb');
+      if (e.key === '4') setActiveGadget('electric_web');
+      if (e.key === '5') setActiveGadget('suspension_matrix');
+    };
+    window.addEventListener('keydown', handleGadgetKeyDown);
+    return () => window.removeEventListener('keydown', handleGadgetKeyDown);
+  }, []);
+
+  const handleFireGadget = (gadget: SpiderGadgetType) => {
+    setGadgetCharges((prev) => {
+      const current = prev[gadget] ?? 1;
+      if (current <= 1) {
+        // Trigger reload cooldown
+        setTimeout(() => {
+          setGadgetCharges((p) => ({
+            ...p,
+            [gadget]: GADGET_DEFINITIONS[gadget].maxCharges,
+          }));
+        }, GADGET_DEFINITIONS[gadget].cooldownSec * 1000);
+        return { ...prev, [gadget]: 0 };
+      }
+      return { ...prev, [gadget]: current - 1 };
+    });
+  };
 
   // Distance to active mission
   const missionDist = activeMission
@@ -287,8 +352,38 @@ export default function ExploreHUD({
           </div>
         </div>
 
-        {/* Right: Camera Mode, Cinema Bars, Photo Mode, Gallery, Pizza Counter */}
+        {/* Right: Multiplayer Hub, Spider-Vision, Camera Mode, Cinema Bars, Photo Mode, Gallery, Pizza Counter */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Spider-Vision AR Scanner Toggle Button */}
+          {onToggleSpiderVision && (
+            <button
+              onClick={onToggleSpiderVision}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-xl text-xs sm:text-sm tracking-wider shadow-xl transition active:scale-95 group font-bold ${
+                spiderVisionActive
+                  ? 'bg-cyan-950 border-cyan-400 text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.8)] scale-105'
+                  : 'bg-neutral-900/90 border-neutral-700 text-neutral-300 hover:text-cyan-300 hover:border-cyan-500'
+              }`}
+              title="Toggle Spider-Sense AR Scanner Hologram Overlay [Hotkey: T]"
+            >
+              <Eye size={15} className={spiderVisionActive ? 'text-cyan-300 animate-spin' : 'text-cyan-400'} />
+              <span className="hidden sm:inline">SPIDER-VISION</span>
+              <kbd className="px-1 py-0.2 bg-black/60 rounded text-[10px] font-mono text-cyan-200 border border-cyan-500/40">
+                T
+              </kbd>
+            </button>
+          )}
+
+          {/* Multiplayer Co-Op Hub Button */}
+          <button
+            onClick={() => setMultiplayerHubOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-500/80 rounded-xl text-emerald-300 text-xs sm:text-sm tracking-wider shadow-xl transition active:scale-95 group font-bold"
+            title="Open Live Multiplayer Co-Op Session & Spider-Radio"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+            <Users size={14} className="text-emerald-400 group-hover:scale-110 transition" />
+            <span className="hidden sm:inline">4 CO-OP SPIDEYS</span>
+          </button>
+
           {/* Live Broadcast Toggle Button */}
           {onToggleLiveBroadcast && (
             <button
@@ -593,8 +688,42 @@ export default function ExploreHUD({
         </div>
       </div>
 
-      {/* 4. BOTTOM SECTION: Speedometer & Controls Guide & Mobile Action Buttons */}
-      <div className="flex flex-col gap-2.5 w-full pointer-events-auto">
+      {/* 3.5. Live Police Radio Scanner Dispatch Floating Bar */}
+      <div className="flex justify-center mb-2 z-20">
+        <CrimeRadioDispatch
+          playerPos={playerPos}
+          onAcceptCrime={(crime) => {
+            setActiveRadioIncident(crime);
+          }}
+          activeIncident={activeRadioIncident}
+          onDismissIncident={() => setActiveRadioIncident(null)}
+        />
+      </div>
+
+      {/* 4. BOTTOM SECTION: Speedometer & Gadgets & Suit Ultimate & Controls Guide & Mobile Action Buttons */}
+      <div className="flex flex-col gap-2.5 w-full pointer-events-auto items-center">
+        {/* Gadget Bar and Suit Ultimate Power Meter */}
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          {/* Spider-Man Tech Gadget Bar */}
+          <SpiderGadgetBar
+            activeGadget={activeGadget}
+            onSelectGadget={(g) => setActiveGadget(g)}
+            charges={gadgetCharges}
+            onFireGadget={handleFireGadget}
+          />
+
+          {/* Suit Ultimate Power Meter */}
+          {onActivateSuitPower && (
+            <SuitUltimatePowerHUD
+              suitId={suitId}
+              suitName={suitName}
+              powerCharge={suitPowerCharge}
+              isActive={suitPowerActive}
+              onActivatePower={onActivateSuitPower}
+            />
+          )}
+        </div>
+
         {/* Desktop Controls Bar */}
         <div className="hidden md:flex items-center justify-center gap-2 bg-neutral-900/85 border border-neutral-800 py-1 px-4 rounded-full self-center backdrop-blur-md text-xs text-neutral-300 tracking-wider flex-wrap shadow-lg">
           <span className="text-amber-400 font-bold">
@@ -845,6 +974,46 @@ export default function ExploreHUD({
           )}
         </div>
       </div>
+
+      {/* 5. Spider-Vision AR Scanner Visual Screen Overlay */}
+      {spiderVisionActive && (
+        <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden flex flex-col justify-between p-4">
+          {/* Cyan Corner Brackets */}
+          <div className="flex justify-between w-full">
+            <div className="w-12 h-12 border-t-2 border-l-2 border-cyan-400 opacity-80" />
+            <div className="text-center font-mono text-cyan-400 text-xs tracking-widest bg-cyan-950/80 px-4 py-1 rounded-full border border-cyan-500/60 shadow-[0_0_15px_#06b6d4]">
+              SPIDER-SENSE AR SCANNER ACTIVE // TARGETING HUD
+            </div>
+            <div className="w-12 h-12 border-t-2 border-r-2 border-cyan-400 opacity-80" />
+          </div>
+
+          {/* Center Targeting Reticle */}
+          <div className="self-center flex flex-col items-center opacity-60">
+            <div className="w-16 h-16 rounded-full border border-cyan-400/50 flex items-center justify-center animate-spin">
+              <div className="w-8 h-8 rounded-full border-t-2 border-b-2 border-cyan-300" />
+            </div>
+          </div>
+
+          <div className="flex justify-between w-full">
+            <div className="w-12 h-12 border-b-2 border-l-2 border-cyan-400 opacity-80" />
+            <div className="text-center font-mono text-cyan-400 text-[10px] tracking-widest">
+              FREQ: 844.2 MHZ // BIOMETRICS: NORMAL
+            </div>
+            <div className="w-12 h-12 border-b-2 border-r-2 border-cyan-400 opacity-80" />
+          </div>
+        </div>
+      )}
+
+      {/* 6. Realtime Multiplayer Co-Op Session Modal */}
+      <MultiplayerHubModal
+        isOpen={multiplayerHubOpen}
+        onClose={() => setMultiplayerHubOpen(false)}
+        multiplayerEnabled={multiplayerEnabled}
+        onToggleMultiplayer={() => setMultiplayerEnabled(!multiplayerEnabled)}
+        onSendCoopPing={(msg) => {
+          // Handled inside modal with notification
+        }}
+      />
     </div>
   );
 }

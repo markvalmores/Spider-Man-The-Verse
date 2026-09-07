@@ -215,6 +215,71 @@ export default function SpiderCharacter({
           metalness: 0.1,
           eyeType: 'comic',
         };
+      case 'night-monkey':
+        return {
+          primary: '#18181b',
+          secondary: '#09090b',
+          eyes: '#a1a1aa',
+          eyeFrame: '#27272a',
+          emblem: '#27272a',
+          backEmblem: '#27272a',
+          webColor: '#27272a',
+          roughness: 0.85,
+          metalness: 0.1,
+          eyeType: 'stark',
+        };
+      case 'miles-morales':
+        return {
+          primary: '#18181b',
+          secondary: '#dc2626',
+          eyes: '#ffffff',
+          eyeFrame: '#09090b',
+          emblem: '#ef4444',
+          backEmblem: '#ef4444',
+          webColor: '#ef4444',
+          roughness: 0.4,
+          metalness: 0.2,
+          eyeType: 'comic',
+        };
+      case 'spider-gwen':
+        return {
+          primary: '#f8fafc',
+          secondary: '#0f172a',
+          eyes: '#ec4899',
+          eyeFrame: '#06b6d4',
+          emblem: '#06b6d4',
+          backEmblem: '#ec4899',
+          webColor: '#ec4899',
+          roughness: 0.2,
+          metalness: 0.3,
+          eyeType: 'comic',
+        };
+      case 'spider-2099':
+        return {
+          primary: '#1e1b4b',
+          secondary: '#dc2626',
+          eyes: '#ef4444',
+          eyeFrame: '#991b1b',
+          emblem: '#dc2626',
+          backEmblem: '#dc2626',
+          webColor: '#ef4444',
+          roughness: 0.1,
+          metalness: 0.7,
+          eyeType: 'nano',
+        };
+      case 'iron-spider':
+        return {
+          primary: '#991b1b',
+          secondary: '#1e3a8a',
+          eyes: '#38bdf8',
+          eyeFrame: '#eab308',
+          emblem: '#eab308',
+          backEmblem: '#eab308',
+          webColor: '#eab308',
+          roughness: 0.15,
+          metalness: 0.85,
+          eyeType: 'nano',
+        };
       default: // Classic
         return {
           primary: '#dc2626',

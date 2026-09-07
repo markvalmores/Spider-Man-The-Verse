@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import {
@@ -11,6 +11,13 @@ import {
 } from './CityTypes';
 import WeatherSystem, { WEATHER_CONFIGS } from './WeatherSystem';
 import CityPedestrians from './CityPedestrians';
+import CityLandmarks3D from './CityLandmarks3D';
+import CityRooftopProps, { INITIAL_BACKPACKS, BackpackCollectible } from './CityRooftopProps';
+import CityCrimeCombat3D from './CityCrimeCombat3D';
+import AerialRingChallenges from './AerialRingChallenges';
+import { MultiplayerCityPlayers } from './MultiplayerCityPlayers';
+import SpiderVisionAR from './SpiderVisionAR';
+import SubwayFastTravel3D from './SubwayFastTravel3D';
 
 interface CityEnvironmentProps {
   buildings: BuildingData[];
@@ -21,11 +28,16 @@ interface CityEnvironmentProps {
   isPaused?: boolean;
   activeInteractionTrigger?: number;
   isPlayerAttackingOrSlamming?: boolean;
+  isAttacking?: boolean;
+  isSlamming?: boolean;
+  spiderVisionActive?: boolean;
   onCollectPizza: (id: string, pts: number) => void;
   onReachMission: (id: string) => void;
   onPedestriansUpdate?: (peds: PedestrianData[]) => void;
   onNearbyCitizenChange?: (prompt: NearbyCitizenPrompt | null) => void;
   onCitizenInteracted?: (karmaReward: number, dialog: string) => void;
+  onBackpackCollected?: (name: string, lore: string, reward: number) => void;
+  onFastTravel?: (pos: [number, number, number], name: string) => void;
   playSound?: (sound: any) => void;
 }
 
@@ -38,16 +50,31 @@ export default function CityEnvironment({
   isPaused = false,
   activeInteractionTrigger = 0,
   isPlayerAttackingOrSlamming = false,
+  isAttacking = false,
+  isSlamming = false,
+  spiderVisionActive = false,
   onCollectPizza,
   onReachMission,
   onPedestriansUpdate,
   onNearbyCitizenChange,
   onCitizenInteracted,
+  onBackpackCollected,
+  onFastTravel,
   playSound,
 }: CityEnvironmentProps) {
   const pizzaGroupRef = useRef<THREE.Group>(null);
   const beaconRef = useRef<THREE.Mesh>(null);
   const weatherConfig = WEATHER_CONFIGS[weather];
+  const [backpacks, setBackpacks] = useState<BackpackCollectible[]>(INITIAL_BACKPACKS);
+
+  const handleCollectBackpack = (id: string, name: string, lore: string, reward: number) => {
+    setBackpacks((prev) =>
+      prev.map((bp) => (bp.id === id ? { ...bp, collected: true } : bp))
+    );
+    if (onBackpackCollected) {
+      onBackpackCollected(name, lore, reward);
+    }
+  };
 
   // Animate collectibles
   useFrame((_, delta) => {
@@ -292,6 +319,81 @@ export default function CityEnvironment({
           </mesh>
         </group>
       )}
+
+      {/* Iconic NYC & Marvel Landmarks, Bridges, Parks, Billboards & Dynamic Traffic */}
+      <CityLandmarks3D
+        playerPos={playerPos}
+        weather={weather}
+        playSound={playSound}
+      />
+
+      {/* Rooftop Props: Peter's Hidden Backpacks, Steam Vents, Water Towers, Cranes */}
+      <CityRooftopProps
+        playerPos={playerPos}
+        backpacks={backpacks}
+        onCollectBackpack={handleCollectBackpack}
+      />
+
+      {/* 3D Crime Combat System with animated hostiles and combat popups */}
+      <CityCrimeCombat3D
+        playerPos={playerPos}
+        isAttacking={isAttacking}
+        isSlamming={isSlamming}
+        crimeActive={!!activeMission && !activeMission.completed}
+        crimeLocation={activeMission ? activeMission.location : [80, 40, 50]}
+        onEnemyDefeated={(name, karma, pizza) => {
+          if (onCitizenInteracted) {
+            onCitizenInteracted(karma, `Defeated ${name}! +${pizza} Pizza`);
+          }
+        }}
+        onAllEnemiesCleared={() => {
+          if (activeMission) {
+            onReachMission(activeMission.id);
+          }
+        }}
+        playSound={playSound}
+      />
+
+      {/* Skyline Aerial Rings Web-Swing Challenges */}
+      <AerialRingChallenges
+        playerPos={playerPos}
+        onPassRing={(ringId, total) => {
+          if (onCitizenInteracted) {
+            onCitizenInteracted(10, `Ring Checkpoint ${ringId}/${total} Cleared! ⚡`);
+          }
+        }}
+        onCourseCompleted={() => {
+          if (onCitizenInteracted) {
+            onCitizenInteracted(100, `🏆 SKYLINE TIME TRIAL COMPLETED! +100 KARMA`);
+          }
+        }}
+        playSound={playSound}
+      />
+
+      {/* Real-time Multiplayer Co-Op Spider-Heroes swinging through NYC */}
+      <MultiplayerCityPlayers
+        localPlayerPos={playerPos}
+      />
+
+      {/* Spider-Vision AR Scanner Hologram Overlay */}
+      <SpiderVisionAR
+        active={spiderVisionActive}
+        playerPos={playerPos}
+        activeMission={activeMission}
+        backpacks={backpacks}
+      />
+
+      {/* 3D Subway Fast Travel Stations in Manhattan */}
+      <SubwayFastTravel3D
+        playerPos={playerPos}
+        onFastTravel={(pos, name) => {
+          if (onFastTravel) onFastTravel(pos, name);
+          if (onCitizenInteracted) {
+            onCitizenInteracted(15, `Subway Fast-Travel to ${name}! 🚇`);
+          }
+        }}
+        playSound={playSound}
+      />
 
       {/* 3D Living Pedestrians with AI Reactions & Interactions */}
       <CityPedestrians

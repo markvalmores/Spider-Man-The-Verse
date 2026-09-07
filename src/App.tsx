@@ -185,14 +185,6 @@ export default function App() {
     );
   }
 
-  if (currentMode === 'Character Selection') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 p-6">
-        <CharacterSelection onSelect={(char) => { setSelectedCharacter(char); setCurrentMode('Main Menu'); }} />
-      </div>
-    );
-  }
-
   if (currentMode === 'Gacha Shop') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 p-6">
@@ -230,6 +222,19 @@ export default function App() {
           onClose={() => setCurrentMode('Main Menu')}
         />
       </div>
+    );
+  }
+
+  if (currentMode === 'Character Selection') {
+    return (
+      <CharacterSelection
+        selectedCharacter={selectedCharacter}
+        onSelect={(c) => {
+          setSelectedCharacter(c);
+          setCurrentMode('Explore the World');
+        }}
+        onBack={() => setCurrentMode('Main Menu')}
+      />
     );
   }
 
