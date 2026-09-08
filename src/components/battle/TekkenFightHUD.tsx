@@ -13,6 +13,9 @@ import {
   Users,
   Infinity as InfinityIcon,
   RefreshCw,
+  Home,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import {
   PlayerFighterState,
@@ -50,6 +53,10 @@ interface TekkenFightHUDProps {
   isPromotionMatch?: boolean;
   isDemotionMatch?: boolean;
   recentInputs?: string[];
+  onForceStartRound?: () => void;
+  isUiHidden: boolean;
+  onToggleUi: () => void;
+  onExitToHub: () => void;
 }
 
 export default function TekkenFightHUD({
@@ -79,6 +86,10 @@ export default function TekkenFightHUD({
   isPromotionMatch = false,
   isDemotionMatch = false,
   recentInputs = [],
+  onForceStartRound,
+  isUiHidden,
+  onToggleUi,
+  onExitToHub,
 }: TekkenFightHUDProps) {
   // Smooth Shrinking Red Damage Trails
   const [p1TrailHealth, setP1TrailHealth] = useState(p1.health);
@@ -159,34 +170,56 @@ export default function TekkenFightHUD({
         hudShake ? 'translate-y-1' : 'translate-y-0'
       }`}
     >
-      {/* Top Banner for Promotion / Demotion Matches */}
-      <AnimatePresence>
-        {isPromotionMatch && (
-          <motion.div
-            initial={{ y: -40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -40, opacity: 0 }}
-            className="absolute top-1 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-neutral-950 font-black text-[10px] sm:text-xs tracking-widest uppercase shadow-[0_0_20px_rgba(245,158,11,0.8)] border border-yellow-100 flex items-center gap-1.5 z-40 animate-pulse"
-          >
-            <Sparkles size={14} />
-            <span>PROMOTION CHANCE MATCH</span>
-          </motion.div>
-        )}
-        {isDemotionMatch && (
-          <motion.div
-            initial={{ y: -40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -40, opacity: 0 }}
-            className="absolute top-1 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 text-white font-black text-[10px] sm:text-xs tracking-widest uppercase shadow-[0_0_20px_rgba(239,68,68,0.8)] border border-red-300 flex items-center gap-1.5 z-40 animate-pulse"
-          >
-            <AlertTriangle size={14} />
-            <span>DEMOTION RISK MATCH</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Top-Right Action Toolbar (Menu & Hide/Show UI) */}
+      <div className="absolute top-2 right-2 flex items-center gap-2 z-50 pointer-events-auto">
+        <button
+          onClick={onToggleUi}
+          className="px-3 py-1.5 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-700 text-amber-300 font-black text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md transition"
+          title={isUiHidden ? "Show All UI" : "Hide All UI for Free View"}
+        >
+          {isUiHidden ? <Eye size={14} /> : <EyeOff size={14} />}
+          <span>{isUiHidden ? 'SHOW UI' : 'HIDE UI'}</span>
+        </button>
+        <button
+          onClick={onExitToHub}
+          className="px-3 py-1.5 rounded-xl bg-red-950/90 hover:bg-red-900 border border-red-700 text-white font-black text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md transition"
+          title="Return to Battle Hub / Main Menu"
+        >
+          <Home size={14} />
+          <span>MENU</span>
+        </button>
+      </div>
+
+      {!isUiHidden && (
+        <>
+          {/* Top Banner for Promotion / Demotion Matches */}
+          <AnimatePresence>
+            {isPromotionMatch && (
+              <motion.div
+                initial={{ y: -40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -40, opacity: 0 }}
+                className="absolute top-1 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-neutral-950 font-black text-[10px] sm:text-xs tracking-widest uppercase shadow-[0_0_20px_rgba(245,158,11,0.8)] border border-yellow-100 flex items-center gap-1.5 z-40 animate-pulse"
+              >
+                <Sparkles size={14} />
+                <span>PROMOTION CHANCE MATCH</span>
+              </motion.div>
+            )}
+            {isDemotionMatch && (
+              <motion.div
+                initial={{ y: -40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -40, opacity: 0 }}
+                className="absolute top-1 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 text-white font-black text-[10px] sm:text-xs tracking-widest uppercase shadow-[0_0_20px_rgba(239,68,68,0.8)] border border-red-300 flex items-center gap-1.5 z-40 animate-pulse"
+              >
+                <AlertTriangle size={14} />
+                <span>DEMOTION RISK MATCH</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
       {/* TOP COMBAT BAR: Health Bars, Heat Gauges, Round Indicators, Timer, Tag Partners & Dan Badges */}
-      <div className="w-full flex items-start justify-between gap-2 sm:gap-4 relative z-20 mt-1">
+      <div className="w-full flex items-start justify-between gap-2 sm:gap-4 relative z-20 mt-10 sm:mt-12">
         {/* PLAYER 1 (LEFT) */}
         <div className="flex-1 flex flex-col items-start max-w-[43%]">
           {/* Name & Rank Tag */}
@@ -607,7 +640,9 @@ export default function TekkenFightHUD({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.6, opacity: 0, y: 30 }}
               transition={{ type: 'spring', stiffness: 350, damping: 22 }}
-              className="text-center z-30 pointer-events-none flex flex-col items-center"
+              onClick={onForceStartRound}
+              className="text-center z-30 pointer-events-auto cursor-pointer flex flex-col items-center group"
+              title="Click to start fight immediately"
             >
               {announcementText.includes('WIN') || announcementText.includes('PERFECT') || announcementText.includes('K.O.') ? (
                 <motion.div
@@ -799,6 +834,8 @@ export default function TekkenFightHUD({
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

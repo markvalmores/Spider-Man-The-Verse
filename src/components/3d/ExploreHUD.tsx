@@ -167,6 +167,7 @@ export default function ExploreHUD({
   // Multiplayer & Co-Op State
   const [multiplayerHubOpen, setMultiplayerHubOpen] = useState(false);
   const [multiplayerEnabled, setMultiplayerEnabled] = useState(true);
+  const [isUiHidden, setIsUiHidden] = useState<boolean>(false);
 
   // Spider-Tech Gadgets State
   const [activeGadget, setActiveGadget] = useState<SpiderGadgetType>('web_shooter');
@@ -233,10 +234,27 @@ export default function ExploreHUD({
       ? 'Neighborhood Guardian'
       : 'Rookie Vigilante';
 
+  if (isUiHidden) {
+    return (
+      <div className="absolute inset-0 pointer-events-none z-50">
+        <div className="absolute top-4 right-4 pointer-events-auto">
+          <button
+            onClick={() => setIsUiHidden(false)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-neutral-900/95 hover:bg-neutral-800 border-2 border-amber-400 text-amber-300 rounded-2xl shadow-[0_0_25px_rgba(245,158,11,0.7)] font-black text-sm tracking-wider transition active:scale-95 animate-pulse cursor-pointer"
+            title="Show All UI"
+          >
+            <Eye size={18} />
+            <span>SHOW UI</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="absolute inset-0 pointer-events-none font-['Bangers'] text-white select-none z-20 overflow-hidden flex flex-col justify-between p-3 md:p-5">
+    <div className="absolute inset-0 pointer-events-none font-['Bangers'] text-white select-none z-20 overflow-hidden flex flex-col justify-between p-4 md:p-6 gap-4">
       {/* 1. TOP HEADER BAR */}
-      <div className="flex items-center justify-between w-full pointer-events-auto gap-2 flex-wrap">
+      <div className="flex items-center justify-between w-full pointer-events-auto gap-3 md:gap-6 flex-wrap">
         {/* Left: Return & Suit & Hero Karma */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Return Button */}
@@ -510,6 +528,16 @@ export default function ExploreHUD({
             </button>
           )}
 
+          {/* Hide UI Button */}
+          <button
+            onClick={() => setIsUiHidden(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-700 hover:border-amber-500 text-amber-300 rounded-xl text-xs sm:text-sm font-bold shadow-xl transition active:scale-95"
+            title="Hide All UI for Free View"
+          >
+            <EyeOff size={15} />
+            <span className="hidden sm:inline">HIDE UI</span>
+          </button>
+
           {/* Pizza Currency Counter */}
           <div className="flex items-center gap-1.5 bg-neutral-900/90 border border-amber-600/40 px-2.5 py-1.5 rounded-xl text-base text-yellow-400 shadow-lg">
             <span>🍕</span>
@@ -633,7 +661,7 @@ export default function ExploreHUD({
       </div>
 
       {/* 3. MIDDLE SECTION: Mission Tracker (Left), Interactive Citizen Prompt (Center), Minimap Radar (Right) */}
-      <div className="flex justify-between items-end w-full my-auto gap-4">
+      <div className="flex justify-between items-end w-full my-auto gap-6 md:gap-8">
         {/* Left: Active Mission HUD */}
         <div className="pointer-events-auto max-w-xs md:max-w-sm bg-neutral-900/85 border-l-4 border-red-500 p-3.5 rounded-r-2xl backdrop-blur-md shadow-2xl">
           {activeMission ? (

@@ -370,6 +370,17 @@ export default function CharacterSelectTekken({
             >
               SELECT STAGE
             </button>
+
+            <button
+              onClick={() => setActiveTab('rules')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition ${
+                activeTab === 'rules'
+                  ? 'bg-purple-600 text-white shadow'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              MATCH RULES
+            </button>
           </div>
 
           {/* Active Tab Target Banner */}
@@ -384,12 +395,91 @@ export default function CharacterSelectTekken({
                 ? 'Choose Opponent Primary Fighter'
                 : activeTab === 'p2_tag'
                 ? 'Choose Opponent Tag Partner'
-                : 'Choose Battle Arena & Environment'}
+                : activeTab === 'stage'
+                ? 'Choose Battle Arena & Environment'
+                : 'Configure Match Timer & Team Rules'}
             </span>
           </div>
 
-          {/* Fighter Grid */}
-          {activeTab !== 'stage' ? (
+          {/* Tab Content Panel */}
+          {activeTab === 'rules' ? (
+            <div className="flex flex-col gap-4 w-full max-w-lg bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold text-neutral-400">ROUND TIMER SETTING</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {[30, 60, 99, 'infinite'].map((t) => (
+                    <button
+                      key={String(t)}
+                      onClick={() => { setTimerSetting(t as MatchTimerSetting); playSound('click'); }}
+                      className={`py-2 rounded-xl text-xs font-black border transition ${
+                        timerSetting === t
+                          ? 'bg-amber-500 border-amber-300 text-neutral-950 shadow'
+                          : 'bg-neutral-950 border-neutral-800 text-neutral-300 hover:bg-neutral-900'
+                      }`}
+                    >
+                      {t === 'infinite' ? '∞' : `${t}s`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold text-neutral-400">TEAM FORMAT</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { mode: 'solo', label: '1v1 SOLO BATTLE' },
+                    { mode: 'tag', label: '2v2 TAG TEAM' },
+                  ].map((m) => (
+                    <button
+                      key={m.mode}
+                      onClick={() => { setTeamMode(m.mode as MatchTeamMode); playSound('click'); }}
+                      className={`py-2.5 rounded-xl text-xs font-black border transition ${
+                        teamMode === m.mode
+                          ? 'bg-purple-600 border-purple-400 text-white shadow'
+                          : 'bg-neutral-950 border-neutral-800 text-neutral-300 hover:bg-neutral-900'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'stage' ? (
+            /* Arena Stages Grid */
+            <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
+              {ARENA_STAGES.map((stg, idx) => {
+                const isSelected = selectedStageIndex === idx;
+
+                return (
+                  <button
+                    key={stg.id}
+                    onClick={() => {
+                      setSelectedStageIndex(idx);
+                      playSound('whoosh');
+                    }}
+                    className={`flex flex-col p-3 rounded-2xl border-2 text-left transition ${
+                      isSelected
+                        ? 'bg-amber-950/80 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-105'
+                        : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-black text-amber-300">{stg.name}</span>
+                      {stg.hasWallBreak && (
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-800 text-neutral-300 font-bold">
+                          WALL SPLAT
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-neutral-400">{stg.subtitle}</span>
+                    <span className="text-[9px] text-neutral-500 mt-1">📍 {stg.location}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            /* Fighter Grid */
             <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5 w-full">
               {FIGHTER_ROSTER.map((f, idx) => {
                 let isSelected = false;
@@ -423,39 +513,6 @@ export default function CharacterSelectTekken({
                     <span className="text-[10px] font-black uppercase text-center leading-tight">
                       {f.name.split(' ')[0]}
                     </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            /* Arena Stages Grid */
-            <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
-              {ARENA_STAGES.map((stg, idx) => {
-                const isSelected = selectedStageIndex === idx;
-
-                return (
-                  <button
-                    key={stg.id}
-                    onClick={() => {
-                      setSelectedStageIndex(idx);
-                      playSound('whoosh');
-                    }}
-                    className={`flex flex-col p-3 rounded-2xl border-2 text-left transition ${
-                      isSelected
-                        ? 'bg-amber-950/80 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-105'
-                        : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-black text-amber-300">{stg.name}</span>
-                      {stg.hasWallBreak && (
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-800 text-neutral-300 font-bold">
-                          WALL SPLAT
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-neutral-400">{stg.subtitle}</span>
-                    <span className="text-[9px] text-neutral-500 mt-1">📍 {stg.location}</span>
                   </button>
                 );
               })}

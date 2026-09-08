@@ -147,6 +147,7 @@ export default function TekkenBattleEngine({
   const [isSlowMo, setIsSlowMo] = useState<boolean>(false);
   const [isCinematicRage, setIsCinematicRage] = useState<boolean>(false);
   const [hitSparkPos, setHitSparkPos] = useState<[number, number, number] | null>(null);
+  const [isUiHidden, setIsUiHidden] = useState<boolean>(false);
 
   // Arcade Pre-Fight Story Dialogue
   const [showArcadeDialogue, setShowArcadeDialogue] = useState<boolean>(
@@ -233,6 +234,18 @@ export default function TekkenBattleEngine({
     setRecentInputs((prev) => [...prev.slice(-8), notation]);
   };
 
+  const handleForceStart = useCallback(() => {
+    if (!isRoundActive) {
+      setAnnouncementText('FIGHT!');
+      setAnnouncementSub(null);
+      playSound('combat');
+      setIsRoundActive(true);
+      setTimeout(() => {
+        setAnnouncementText(null);
+      }, 1000);
+    }
+  }, [isRoundActive, playSound]);
+
   // Initialize Round Sequence
   const startRound = useCallback(
     (roundNum: number) => {
@@ -246,6 +259,7 @@ export default function TekkenBattleEngine({
       // Reset Active and Bench fighters to full health
       setP1((prev) => ({
         ...prev,
+        roundsWon: roundNum === 1 ? 0 : prev.roundsWon,
         health: 100,
         recoverableHealth: 100,
         heatGauge: 100,
@@ -262,6 +276,7 @@ export default function TekkenBattleEngine({
 
       setP2((prev) => ({
         ...prev,
+        roundsWon: roundNum === 1 ? 0 : prev.roundsWon,
         health: 100,
         recoverableHealth: 100,
         heatGauge: 100,
@@ -885,6 +900,10 @@ export default function TekkenBattleEngine({
         isPromotionMatch={isPromotionMatch}
         isDemotionMatch={isDemotionMatch}
         recentInputs={recentInputs}
+        onForceStartRound={handleForceStart}
+        isUiHidden={isUiHidden}
+        onToggleUi={() => setIsUiHidden(!isUiHidden)}
+        onExitToHub={onExitToHub}
       />
 
       {/* Dojo Training Mode Overlay */}
@@ -1059,6 +1078,9 @@ export default function TekkenBattleEngine({
                 <button
                   onClick={() => {
                     setMatchResult(null);
+                    setCurrentRound(1);
+                    setP1(p => ({ ...p, roundsWon: 0 }));
+                    setP2(p => ({ ...p, roundsWon: 0 }));
                     startRound(1);
                   }}
                   className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 text-neutral-200"

@@ -25,6 +25,7 @@ import {
   History,
 } from 'lucide-react';
 import MatchHistoryModal from './MatchHistoryModal';
+import FighterShowcaseModal from './FighterShowcaseModal';
 import {
   FIGHTER_ROSTER,
   FighterArchetype,
@@ -38,6 +39,7 @@ import {
   getRankedProfile,
   getRankByTier,
   RankedProfile,
+  saveRankedProfile,
 } from './RankedProgressionSystem';
 import CharacterSelectTekken from './CharacterSelectTekken';
 import TekkenBattleEngine from './TekkenBattleEngine';
@@ -119,6 +121,7 @@ export default function FightingModeHub({
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [matchFound, setMatchFound] = useState<FighterArchetype | null>(null);
   const [showMatchHistory, setShowMatchHistory] = useState(false);
+  const [showFighterDatabase, setShowFighterDatabase] = useState(false);
 
   const currentRank = getRankByTier(profile.rankTier);
   const nextRank = TEKKEN_RANKS.find((r) => r.tier === profile.rankTier + 1);
@@ -126,6 +129,17 @@ export default function FightingModeHub({
     profile.wins + profile.losses > 0
       ? Math.round((profile.wins / (profile.wins + profile.losses)) * 100)
       : 0;
+
+  const handleClaimMilestone = (tier: number) => {
+    const claimed = profile.claimedMilestones || [];
+    if (claimed.includes(tier)) return;
+    const updatedClaimed = [...claimed, tier];
+    const updatedProfile = { ...profile, claimedMilestones: updatedClaimed };
+    saveRankedProfile(updatedProfile);
+    setProfile(updatedProfile);
+    onUpdatePizza(pizza + 250);
+    playSound('rankup');
+  };
 
   // Handle Mode Click
   const handleLaunchMode = (mode: 'ranked' | 'arcade' | 'versus' | 'practice') => {
@@ -424,11 +438,15 @@ export default function FightingModeHub({
           {TEKKEN_RANKS.map((rank) => {
             const isUserRank = rank.tier === profile.rankTier;
             const isUnlocked = profile.highestRankTier >= rank.tier;
+            const isMilestone = rank.tier % 5 === 0;
+            const claimedMilestones = profile.claimedMilestones || [];
+            const isClaimed = claimedMilestones.includes(rank.tier);
+            const canClaim = isUnlocked && isMilestone && !isClaimed;
 
             return (
               <div
                 key={rank.tier}
-                className={`p-3.5 rounded-2xl border-2 flex items-center gap-3 transition ${
+                className={`p-3.5 rounded-2xl border-2 flex flex-col justify-between gap-3 transition ${
                   isUserRank
                     ? 'bg-neutral-900 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-102'
                     : isUnlocked
@@ -436,26 +454,46 @@ export default function FightingModeHub({
                     : 'bg-neutral-950/60 border-neutral-900 opacity-60'
                 }`}
               >
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center text-xl font-black text-neutral-950 shadow-md flex-shrink-0"
-                  style={{ backgroundColor: rank.color }}
-                >
-                  <Award size={22} />
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-xl font-black text-neutral-950 shadow-md flex-shrink-0"
+                    style={{ backgroundColor: rank.color }}
+                  >
+                    <Award size={22} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-black text-white truncate">{rank.dan}</span>
+                      {isUserRank && (
+                        <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-400 text-neutral-950">
+                          YOU
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-neutral-400">{rank.category} Division</span>
+                    <span className="text-[10px] font-mono font-bold text-amber-400">
+                      {rank.requiredRP.toLocaleString()} RP
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-black text-white truncate">{rank.dan}</span>
-                    {isUserRank && (
-                      <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-400 text-neutral-950">
-                        YOU
-                      </span>
+
+                {isMilestone && (
+                  <div className="pt-2 border-t border-neutral-800/80 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-amber-300">🎁 Milestone +250 🍕</span>
+                    {canClaim ? (
+                      <button
+                        onClick={() => handleClaimMilestone(rank.tier)}
+                        className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black text-[10px] transition shadow"
+                      >
+                        CLAIM
+                      </button>
+                    ) : isClaimed ? (
+                      <span className="text-[10px] font-bold text-emerald-400">CLAIMED</span>
+                    ) : (
+                      <span className="text-[10px] text-neutral-600">LOCKED</span>
                     )}
                   </div>
-                  <span className="text-[10px] text-neutral-400">{rank.category} Division</span>
-                  <span className="text-[10px] font-mono font-bold text-amber-400">
-                    {rank.requiredRP.toLocaleString()} RP
-                  </span>
-                </div>
+                )}
               </div>
             );
           })}
@@ -698,18 +736,28 @@ export default function FightingModeHub({
             </span>
           </div>
 
-          <button
-            onClick={() => { playSound('click'); setShowMatchHistory(true); }}
-            className="w-full py-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-900 border border-neutral-700 hover:border-red-500/50 text-xs font-bold text-amber-400 flex items-center justify-center gap-2 transition shadow"
-          >
-            <History size={15} />
-            <span>VIEW MATCH HISTORY (LAST 3 MATCHES)</span>
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => { playSound('click'); setShowMatchHistory(true); }}
+              className="w-full py-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-900 border border-neutral-700 hover:border-red-500/50 text-xs font-bold text-amber-400 flex items-center justify-center gap-2 transition shadow"
+            >
+              <History size={15} />
+              <span>VIEW MATCH HISTORY (LAST 10 MATCHES)</span>
+            </button>
+            <button
+              onClick={() => { playSound('click'); setShowFighterDatabase(true); }}
+              className="w-full py-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-900 border border-neutral-700 hover:border-amber-500/50 text-xs font-bold text-cyan-400 flex items-center justify-center gap-2 transition shadow"
+            >
+              <User size={15} />
+              <span>MARVEL FIGHTER & MOVE DATABASE</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Match History Modal */}
+      {/* Modals */}
       {showMatchHistory && <MatchHistoryModal onClose={() => setShowMatchHistory(false)} />}
+      {showFighterDatabase && <FighterShowcaseModal onClose={() => setShowFighterDatabase(false)} />}
 
       {/* Matchmaking Overlay Modal */}
       <AnimatePresence>

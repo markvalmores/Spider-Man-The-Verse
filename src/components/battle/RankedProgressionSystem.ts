@@ -13,7 +13,9 @@ export interface RankedProfile {
   perfectRounds: number;
   rageArtFinishes: number;
   wallSplatsCount: number;
+  claimedMilestones?: number[];
 }
+
 
 const STORAGE_KEY = 'tekken_spidey_ranked_profile_v1';
 
@@ -40,6 +42,7 @@ export function getRankedProfile(): RankedProfile {
     perfectRounds: 0,
     rageArtFinishes: 0,
     wallSplatsCount: 0,
+    claimedMilestones: [],
   };
 }
 
@@ -141,10 +144,19 @@ export function saveMatchToHistory(entry: Omit<MatchLogEntry, 'id' | 'timestamp'
       id: Math.random().toString(36).substring(2, 9),
       timestamp: Date.now(),
     };
-    // Keep last 3 matches played
-    const updated = [newEntry, ...history].slice(0, 3);
+    // Keep last 10 matches played
+    const updated = [newEntry, ...history].slice(0, 10);
     localStorage.setItem(MATCH_HISTORY_STORAGE_KEY, JSON.stringify(updated));
   } catch {
     // Ignore
   }
 }
+
+export function clearMatchHistory(): void {
+  try {
+    localStorage.removeItem(MATCH_HISTORY_STORAGE_KEY);
+  } catch {
+    // Ignore
+  }
+}
+

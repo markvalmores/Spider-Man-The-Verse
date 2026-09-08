@@ -1,6 +1,6 @@
-import React from 'react';
-import { History, X, Trophy, Swords, Flame, Award, Clock, Shield } from 'lucide-react';
-import { MatchLogEntry, getMatchHistory } from './RankedProgressionSystem';
+import React, { useState } from 'react';
+import { History, X, Trophy, Swords, Flame, Award, Clock, Shield, Trash2 } from 'lucide-react';
+import { MatchLogEntry, getMatchHistory, clearMatchHistory } from './RankedProgressionSystem';
 import { useAudio } from '../../hooks/useAudio';
 
 interface MatchHistoryModalProps {
@@ -9,7 +9,13 @@ interface MatchHistoryModalProps {
 
 export default function MatchHistoryModal({ onClose }: MatchHistoryModalProps) {
   const { playSound } = useAudio();
-  const history: MatchLogEntry[] = getMatchHistory();
+  const [history, setHistory] = useState<MatchLogEntry[]>(() => getMatchHistory());
+
+  const handleClear = () => {
+    playSound('click');
+    clearMatchHistory();
+    setHistory([]);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
@@ -22,7 +28,7 @@ export default function MatchHistoryModal({ onClose }: MatchHistoryModalProps) {
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-amber-300 to-yellow-200 tracking-wide uppercase font-['Bangers']">
-                MATCH HISTORY (LAST 3 MATCHES)
+                MATCH HISTORY (LAST 10 MATCHES)
               </h2>
               <p className="text-xs text-neutral-400">Review your recent Ranked combat performance & match logs</p>
             </div>
@@ -106,8 +112,19 @@ export default function MatchHistoryModal({ onClose }: MatchHistoryModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-neutral-800 mt-4 flex justify-between items-center text-xs text-neutral-500">
-          <span>Automatically saves the last 3 combat logs</span>
+        <div className="pt-4 border-t border-neutral-800 mt-4 flex items-center justify-between text-xs text-neutral-500">
+          <div className="flex items-center gap-3">
+            <span>Saves up to the last 10 combat logs</span>
+            {history.length > 0 && (
+              <button
+                onClick={handleClear}
+                className="px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-rose-950/60 border border-neutral-800 hover:border-rose-500/50 text-rose-400 font-bold flex items-center gap-1.5 transition"
+              >
+                <Trash2 size={13} />
+                <span>CLEAR HISTORY</span>
+              </button>
+            )}
+          </div>
           <button
             onClick={() => { playSound('click'); onClose(); }}
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-amber-500 text-white font-black hover:brightness-110 transition shadow-lg"
@@ -119,3 +136,4 @@ export default function MatchHistoryModal({ onClose }: MatchHistoryModalProps) {
     </div>
   );
 }
+
